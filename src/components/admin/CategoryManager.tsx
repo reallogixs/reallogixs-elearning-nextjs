@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactElement } from "react";
+import { useState, type CSSProperties, type ReactElement } from "react";
 import { ArrowDown, ArrowUp, FolderPlus, Pencil, Trash2 } from "lucide-react";
 
 import type { Category } from "@/types/domain";
@@ -36,23 +36,26 @@ function CategoryRow({
   return (
     <li>
       <div
-        className="flex flex-wrap items-center justify-between gap-2 border-b border-line py-2 pr-2"
-        style={{ paddingLeft: `${1 + node.depth * 1.5}rem` }}
+        className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-line py-2 pr-2 pl-[calc(1rem+var(--depth)*0.75rem)] sm:pl-[calc(1rem+var(--depth)*1.5rem)]"
+        style={{ "--depth": node.depth } as CSSProperties}
       >
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           {node.depth > 0 ? (
             <span aria-hidden="true" className="text-line">
               └
             </span>
           ) : null}
-          <span className="min-w-0">
-            <span className={node.depth === 0 ? "font-medium" : ""}>{node.name}</span>
-            <span className="ml-2 font-mono text-label text-ink-soft">
-              /{node.slug} · {courseCount(node.id)} courses
+          <span className="flex min-w-0 flex-col">
+            <span className={node.depth === 0 ? "truncate font-semibold" : "truncate"}>
+              {node.name}
+            </span>
+            <span className="truncate text-dash-meta font-normal text-ink-soft">
+              <span className="hidden sm:inline">/{node.slug} · </span>
+              {courseCount(node.id) === 1 ? "1 course" : `${courseCount(node.id)} courses`}
             </span>
           </span>
         </div>
-        <div className="flex items-center">
+        <div className="ml-auto flex items-center">
           <IconButton
             label={`Move ${node.name} up`}
             disabled={index === 0}

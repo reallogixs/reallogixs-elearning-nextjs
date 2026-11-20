@@ -41,7 +41,7 @@ export function CertificatesAdmin(): ReactElement {
             cell: (order) => courseById(db, order.courseId)?.title ?? "—",
           },
           {
-            key: "certificate",
+            key: "actions",
             header: "Certificate",
             className: "text-right",
             cell: (order) => {

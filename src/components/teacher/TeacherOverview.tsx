@@ -86,18 +86,15 @@ export function TeacherOverview(): ReactElement | null {
           height={220}
         />
       </DashCard>
-      <DashCard
-        title="Recent referrals"
-        action={
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-dash-heading">Recent referrals</h2>
           <Button href="/teacher/students" variant="ghost" size="sm" arrow>
             See all
           </Button>
-        }
-      >
-        <div className="-mx-5 -mb-5 sm:-mx-6 sm:-mb-6 [&>div]:rounded-t-none [&>div]:border-x-0 [&>div]:border-b-0 [&>div]:shadow-none">
-          <ReferralsTable db={db} orders={recent} />
         </div>
-      </DashCard>
+        <ReferralsTable db={db} orders={recent} />
+      </div>
     </>
   );
 }

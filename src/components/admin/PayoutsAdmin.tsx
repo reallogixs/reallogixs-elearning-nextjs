@@ -72,7 +72,7 @@ export function PayoutsAdmin(): ReactElement {
             cell: (row) => <span className="font-medium">{formatPKR(row.summary.due)}</span>,
           },
           {
-            key: "action",
+            key: "actions",
             header: "Action",
             className: "text-right",
             cell: (row) => (

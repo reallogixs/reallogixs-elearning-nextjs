@@ -57,7 +57,7 @@ const fills: Partial<Record<ButtonVariant, Record<Tone, string>>> = {
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-10 min-w-10 px-4 text-small gap-2",
+  sm: "h-11 min-w-11 px-4 text-small gap-2",
   md: "h-12 px-6 text-body gap-3",
   lg: "h-14 px-7 text-body gap-3",
 };

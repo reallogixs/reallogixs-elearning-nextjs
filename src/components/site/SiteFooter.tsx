@@ -70,7 +70,10 @@ export function SiteFooter(): ReactElement {
             <h2 className="font-mono text-label text-on-dark-soft uppercase">Contact</h2>
             <ul className="mt-4 flex flex-col gap-3 text-small">
               <li>
-                <a href={`mailto:${content.contact.email}`} className="hover:text-white">
+                <a
+                  href={`mailto:${content.contact.email}`}
+                  className="inline-flex min-h-11 items-center break-all hover:text-white"
+                >
                   {content.contact.email}
                 </a>
               </li>
@@ -82,7 +85,10 @@ export function SiteFooter(): ReactElement {
 
         <div className="flex flex-col gap-2 border-t border-line-dark pt-6 text-small text-on-dark-soft sm:flex-row sm:justify-between">
           <p>© {year} Reallogixs. All rights reserved.</p>
-          <a href="https://reallogixs.com.au" className="hover:text-white">
+          <a
+            href="https://reallogixs.com.au"
+            className="inline-flex min-h-11 items-center hover:text-white"
+          >
             A Reallogixs initiative · reallogixs.com.au
           </a>
         </div>

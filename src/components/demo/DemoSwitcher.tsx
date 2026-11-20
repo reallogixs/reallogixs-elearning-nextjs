@@ -47,10 +47,11 @@ export function DemoSwitcher(): ReactElement {
         type="button"
         onClick={() => setOpen(true)}
         aria-expanded={open}
-        className="fixed right-4 bottom-4 z-40 inline-flex min-h-11 items-center gap-2 rounded-pill bg-navy-900 px-4 text-small font-medium text-white shadow-card hover:bg-navy-800"
+        aria-label="Demo controls"
+        className="fixed right-4 bottom-4 z-40 inline-flex size-11 items-center justify-center gap-2 rounded-pill bg-navy-900 text-small font-medium text-white shadow-card hover:bg-navy-800 sm:w-auto sm:px-4 [body:has([data-action-bar])_&]:bottom-24 lg:[body:has([data-action-bar])_&]:bottom-4"
       >
         <FlaskConical aria-hidden="true" className="size-4 text-cyan-glow" />
-        Demo
+        <span className="hidden sm:inline">Demo</span>
       </button>
       <Modal
         open={open}

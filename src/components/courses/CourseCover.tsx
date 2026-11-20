@@ -26,7 +26,7 @@ export function CourseCover({ title, category, mode, className }: CourseCoverPro
     <div
       aria-hidden="true"
       className={cn(
-        "on-dark relative isolate flex aspect-[16/9] flex-col justify-between overflow-hidden p-4 text-white",
+        "on-dark relative isolate flex aspect-[2/1] flex-col justify-between overflow-hidden p-4 text-white sm:aspect-[16/9]",
         variant,
         className,
       )}

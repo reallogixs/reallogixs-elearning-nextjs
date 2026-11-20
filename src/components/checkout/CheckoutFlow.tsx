@@ -20,6 +20,7 @@ import { ReceiptForm } from "@/components/orders/ReceiptForm";
 
 import { DetailsStep } from "./DetailsStep";
 import { PaymentStep } from "./PaymentStep";
+import { MobileOrderSummary } from "./MobileOrderSummary";
 import { PriceSummary } from "./PriceSummary";
 import { PromoCodeField } from "./PromoCodeField";
 import { StepIndicator } from "./StepIndicator";
@@ -110,12 +111,14 @@ export function CheckoutFlow({ slug }: { slug: string }): ReactElement {
           ) : null}
         </div>
 
+        <MobileOrderSummary course={course} price={price} promoCode={promo?.code ?? null} />
+
         {state !== "open" ? (
           <Alert tone="warning" title="Enrolment unavailable">
             This batch isn&apos;t taking enrolments right now.
           </Alert>
         ) : (
-          <div className="flex flex-col gap-8 rounded-lg border border-line p-6 sm:p-10">
+          <div className="flex flex-col gap-8 rounded-lg border border-line p-5 sm:p-8 lg:p-10">
             <StepIndicator steps={STEPS} current={step} />
             <h2 ref={headingRef} tabIndex={-1} className="text-h3 outline-none" aria-live="polite">
               {STEPS[step]}
@@ -184,7 +187,7 @@ export function CheckoutFlow({ slug }: { slug: string }): ReactElement {
           </div>
         )}
       </div>
-      <aside className="lg:sticky lg:top-[calc(var(--rl-header-h)+1.5rem)] lg:self-start">
+      <aside className="hidden lg:sticky lg:top-[calc(var(--rl-header-h)+1.5rem)] lg:block lg:self-start">
         <PriceSummary course={course} price={price} promoCode={promo?.code ?? null} />
       </aside>
     </div>

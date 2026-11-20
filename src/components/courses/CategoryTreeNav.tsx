@@ -21,7 +21,7 @@ function Branch({ nodes, activeSlug, counts, onSelect }: CategoryTreeNavProps): 
             onClick={() => onSelect(node.slug)}
             style={{ paddingLeft: `${0.75 + node.depth * 1}rem` }}
             className={cn(
-              "flex min-h-10 w-full items-center justify-between gap-2 rounded-sm pr-3 text-left text-small transition-colors",
+              "flex min-h-11 w-full items-center justify-between gap-2 rounded-sm pr-3 text-left text-small transition-colors",
               activeSlug === node.slug
                 ? "bg-navy-900 text-white"
                 : "text-ink-soft hover:bg-mist hover:text-ink",
@@ -56,7 +56,7 @@ export function CategoryTreeNav(props: CategoryTreeNavProps): ReactElement {
         aria-pressed={activeSlug === null}
         onClick={() => onSelect(null)}
         className={cn(
-          "flex min-h-10 items-center rounded-sm px-3 text-left text-small font-medium",
+          "flex min-h-11 items-center rounded-sm px-3 text-left text-small font-medium",
           activeSlug === null ? "bg-navy-900 text-white" : "hover:bg-mist",
         )}
       >

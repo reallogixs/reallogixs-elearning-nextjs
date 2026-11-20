@@ -14,20 +14,27 @@ import { PORTAL_TITLE } from "./navConfig";
 import { PortalNav } from "./PortalNav";
 import { UserAvatar } from "./UserAvatar";
 
+interface PortalSidebarProps {
+  role: Role;
+  onNavigate?: () => void;
+  /** The mobile drawer shows the logo in its own title bar. */
+  showBrand?: boolean;
+}
+
 export function PortalSidebar({
   role,
   onNavigate,
-}: {
-  role: Role;
-  onNavigate?: () => void;
-}): ReactElement {
+  showBrand = true,
+}: PortalSidebarProps): ReactElement {
   const user = useCurrentUser();
   const router = useRouter();
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center border-b border-line/80 px-5 lg:h-[72px]">
-        <BrandMark tag={PORTAL_TITLE[role]} href={`/${role}`} />
-      </div>
+      {showBrand ? (
+        <div className="flex h-16 items-center border-b border-line/80 px-5 lg:h-[72px]">
+          <BrandMark tag={PORTAL_TITLE[role]} href={`/${role}`} />
+        </div>
+      ) : null}
       <div className="flex-1 overflow-y-auto px-4 py-5">
         <PortalNav role={role} onNavigate={onNavigate} />
       </div>

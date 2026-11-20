@@ -10,6 +10,7 @@ import { useDb, useHydrated } from "@/lib/store/hooks";
 import { courseBySlug, instructorById } from "@/lib/store/selectors";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Button } from "@/components/ui/Button";
+import { MobileActionBar } from "@/components/ui/MobileActionBar";
 import { NotFoundState } from "@/components/ui/NotFoundState";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -91,8 +92,8 @@ export function CourseDetail({ slug }: { slug: string }): ReactElement {
           ) : null}
         </div>
 
-        <aside className="lg:sticky lg:top-[calc(var(--rl-header-h)+1.5rem)] lg:self-start">
-          <div className="flex flex-col gap-5 rounded-lg border border-line bg-white p-6 shadow-card">
+        <aside className="order-first lg:sticky lg:top-[calc(var(--rl-header-h)+1.5rem)] lg:order-none lg:self-start">
+          <div className="flex flex-col gap-5 rounded-lg border border-line bg-white p-5 shadow-card sm:p-6">
             <p className="font-mono text-label text-ink-soft uppercase">
               {MODE_LABEL[course.mode]}
             </p>
@@ -102,11 +103,11 @@ export function CourseDetail({ slug }: { slug: string }): ReactElement {
               {left} of {course.seats} seats left
             </p>
             {state === "open" ? (
-              <Button href={`/checkout/${course.slug}`} size="lg" arrow className="w-full">
+              <Button href={`/checkout/${course.slug}`} size="lg" arrow className="hidden w-full lg:inline-flex">
                 Enrol now
               </Button>
             ) : (
-              <Button size="lg" disabled className="w-full">
+              <Button size="lg" disabled className="hidden w-full lg:inline-flex">
                 {ENROLMENT_LABEL[state]}
               </Button>
             )}
@@ -117,6 +118,21 @@ export function CourseDetail({ slug }: { slug: string }): ReactElement {
           </div>
         </aside>
       </section>
+      <MobileActionBar>
+        <div className="flex min-w-0 flex-col">
+          <span className="font-display text-h4 font-semibold">{formatPKR(course.price)}</span>
+          <span className="truncate text-small text-ink-soft">{left} seats left</span>
+        </div>
+        {state === "open" ? (
+          <Button href={`/checkout/${course.slug}`} arrow className="shrink-0">
+            Enrol now
+          </Button>
+        ) : (
+          <Button disabled className="shrink-0">
+            {ENROLMENT_LABEL[state]}
+          </Button>
+        )}
+      </MobileActionBar>
     </>
   );
 }

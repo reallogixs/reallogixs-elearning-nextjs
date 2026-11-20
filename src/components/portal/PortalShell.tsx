@@ -4,13 +4,16 @@ import { useState, type ReactElement, type ReactNode } from "react";
 
 import type { Role } from "@/types/domain";
 
-import { Modal } from "@/components/ui/Modal";
+import { BrandMark } from "@/components/brand/BrandMark";
+import { Drawer } from "@/components/ui/Drawer";
+
+import { PORTAL_TITLE } from "./navConfig";
 
 import { PortalSidebar } from "./PortalSidebar";
 import { PortalTopbar } from "./PortalTopbar";
 import { RequireRole } from "./RequireRole";
 
-/** Layout for every portal: light sidebar on desktop, top bar with menu on mobile. */
+/** Layout for every portal: light sidebar on desktop, the same sidebar in a drawer on mobile. */
 export function PortalShell({ role, children }: { role: Role; children: ReactNode }): ReactElement {
   const [open, setOpen] = useState(false);
   return (
@@ -25,11 +28,17 @@ export function PortalShell({ role, children }: { role: Role; children: ReactNod
             <div className="mx-auto flex max-w-7xl flex-col gap-6">{children}</div>
           </main>
         </div>
-        <Modal open={open} onClose={() => setOpen(false)} title="Menu" size="sm">
-          <div className="portal-theme -mx-6 -my-5">
-            <PortalSidebar role={role} onNavigate={() => setOpen(false)} />
+        <Drawer
+          open={open}
+          onClose={() => setOpen(false)}
+          title="Menu"
+          side="left"
+          header={<BrandMark tag={PORTAL_TITLE[role]} href={`/${role}`} />}
+        >
+          <div className="portal-theme h-full">
+            <PortalSidebar role={role} onNavigate={() => setOpen(false)} showBrand={false} />
           </div>
-        </Modal>
+        </Drawer>
       </div>
     </RequireRole>
   );

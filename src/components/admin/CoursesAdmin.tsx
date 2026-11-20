@@ -46,7 +46,7 @@ export function CoursesAdmin(): ReactElement {
               <div className="flex flex-col gap-1">
                 <Link
                   href={`/admin/courses/${course.id}`}
-                  className="font-medium hover:text-teal-700 hover:underline"
+                  className="inline-flex min-h-11 items-center font-semibold hover:text-teal-700 hover:underline"
                 >
                   {course.title}
                 </Link>

@@ -370,3 +370,29 @@
   font-family: var(--rl-font-sans);
   letter-spacing: -0.005em;
 }
+
+/* Drawer slide-in (transform + opacity only). Reduced motion shortens it to nothing. */
+@keyframes rl-drawer-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes rl-drawer-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes rl-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+dialog.drawer-left[open] {
+  animation: rl-drawer-left var(--dur-base) var(--ease-out-expo);
+}
+dialog.drawer-right[open] {
+  animation: rl-drawer-right var(--dur-base) var(--ease-out-expo);
+}
+dialog.drawer[open]::backdrop {
+  animation: rl-backdrop-in var(--dur-base) var(--ease-standard);
+}
