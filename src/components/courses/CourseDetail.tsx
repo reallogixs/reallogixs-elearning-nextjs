@@ -1,0 +1,122 @@
+"use client";
+
+import type { ReactElement } from "react";
+import { CircleCheck, Users } from "lucide-react";
+
+import { categoryTrail } from "@/lib/domain/categories";
+import { formatPKR } from "@/lib/domain/format";
+import { ENROLMENT_LABEL, enrolmentState, seatsLeft } from "@/lib/domain/orders";
+import { useDb, useHydrated } from "@/lib/store/hooks";
+import { courseBySlug, instructorById } from "@/lib/store/selectors";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { Button } from "@/components/ui/Button";
+import { NotFoundState } from "@/components/ui/NotFoundState";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { Skeleton } from "@/components/ui/Skeleton";
+
+import { CourseFacts } from "./CourseFacts";
+import { EnrolmentBadge } from "./EnrolmentBadge";
+import { InstructorCard } from "./InstructorCard";
+import { MODE_LABEL } from "./courseLabels";
+
+export function CourseDetail({ slug }: { slug: string }): ReactElement {
+  const db = useDb();
+  const hydrated = useHydrated();
+  const course = courseBySlug(db, slug);
+
+  if (!course || course.status !== "published") {
+    if (!hydrated) return <Skeleton className="shell my-16 h-96" />;
+    return (
+      <NotFoundState
+        title="Course not found"
+        body="This course may have been removed or isn't published yet."
+        href="/courses"
+        cta="See all courses"
+      />
+    );
+  }
+
+  const instructor = instructorById(db, course.instructorId);
+  const trail = categoryTrail(db.categories, course.categoryId);
+  const state = enrolmentState(course, db.orders);
+  const left = seatsLeft(course, db.orders);
+
+  return (
+    <>
+      <section className="bg-gradient-soft">
+        <div className="rl-stagger relative shell flex flex-col gap-5 py-12 lg:py-16">
+          <Breadcrumbs
+            items={[
+              { label: "Courses", href: "/courses" },
+              ...trail.map((category) => ({
+                label: category.name,
+                href: `/courses?category=${category.slug}`,
+              })),
+              { label: course.title },
+            ]}
+          />
+          <div className="flex flex-wrap gap-2">
+            <EnrolmentBadge state={state} seatsLeft={left} />
+          </div>
+          <h1 className="max-w-3xl text-h1">{course.title}</h1>
+          <p className="max-w-2xl text-body-lg text-ink-soft">{course.summary}</p>
+        </div>
+      </section>
+
+      <section className="shell grid gap-12 py-12 lg:grid-cols-[1fr_380px] lg:py-16">
+        <div className="flex flex-col gap-12">
+          <div className="flex flex-col gap-4">
+            <SectionLabel>About this course</SectionLabel>
+            <p className="text-body-lg">{course.description}</p>
+          </div>
+          <div className="flex flex-col gap-4">
+            <SectionLabel>What you&apos;ll be able to do</SectionLabel>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {course.outcomes.map((outcome) => (
+                <li key={outcome} className="flex gap-3 rounded-md bg-mist p-4">
+                  <CircleCheck
+                    aria-hidden="true"
+                    className="mt-0.5 size-5 shrink-0 text-teal-600"
+                  />
+                  {outcome}
+                </li>
+              ))}
+            </ul>
+          </div>
+          {instructor ? (
+            <div className="flex flex-col gap-4">
+              <SectionLabel>Your instructor</SectionLabel>
+              <InstructorCard instructor={instructor} />
+            </div>
+          ) : null}
+        </div>
+
+        <aside className="lg:sticky lg:top-[calc(var(--rl-header-h)+1.5rem)] lg:self-start">
+          <div className="flex flex-col gap-5 rounded-lg border border-line bg-white p-6 shadow-card">
+            <p className="font-mono text-label text-ink-soft uppercase">
+              {MODE_LABEL[course.mode]}
+            </p>
+            <p className="font-display text-h2 font-semibold">{formatPKR(course.price)}</p>
+            <p className="flex items-center gap-2 text-small text-ink-soft">
+              <Users aria-hidden="true" className="size-4 text-teal-600" />
+              {left} of {course.seats} seats left
+            </p>
+            {state === "open" ? (
+              <Button href={`/checkout/${course.slug}`} size="lg" arrow className="w-full">
+                Enrol now
+              </Button>
+            ) : (
+              <Button size="lg" disabled className="w-full">
+                {ENROLMENT_LABEL[state]}
+              </Button>
+            )}
+            <p className="text-small text-ink-soft">
+              No account needed. Pay by JazzCash, Easypaisa, SadaPay, NayaPay or bank transfer.
+            </p>
+            <CourseFacts course={course} />
+          </div>
+        </aside>
+      </section>
+    </>
+  );
+}

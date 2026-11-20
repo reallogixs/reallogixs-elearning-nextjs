@@ -1,0 +1,372 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  /* Colours — brand palette only, so components cannot reach for off-brand colours */
+  --color-*: initial;
+  --color-white: var(--rl-white);
+  --color-mist: var(--rl-mist);
+  --color-line: var(--rl-line);
+  --color-line-dark: var(--rl-line-dark);
+  --color-ink: var(--rl-ink);
+  --color-ink-soft: var(--rl-ink-soft);
+  --color-on-dark: var(--rl-on-dark);
+  --color-on-dark-soft: var(--rl-on-dark-soft);
+  --color-teal-700: var(--rl-teal-700);
+  --color-teal-600: var(--rl-teal-600);
+  --color-teal-300: var(--rl-teal-300);
+  --color-navy-300: var(--rl-navy-300);
+  --color-ocean-500: var(--rl-ocean-500);
+  --color-sky-400: var(--rl-sky-400);
+  --color-sky-300: var(--rl-sky-300);
+  --color-sky-100: var(--rl-sky-100);
+  --color-navy-600: var(--rl-navy-600);
+  --color-navy-800: var(--rl-navy-800);
+  --color-navy-900: var(--rl-navy-900);
+  --color-navy-950: var(--rl-navy-950);
+  --color-cyan-glow: var(--rl-cyan-glow);
+  --color-chart-1: var(--rl-chart-1);
+  --color-canvas: var(--rl-canvas);
+  --color-success: var(--rl-success);
+  --color-success-text: var(--rl-success-text);
+  --color-error: var(--rl-error);
+  --color-error-text: var(--rl-error-text);
+  --color-warning: var(--rl-warning);
+  --color-warning-text: var(--rl-warning-text);
+
+  /* Fonts (variables set by next/font in layout.tsx) */
+  /* Indirected through --rl-font-* so the portals can swap faces (see .portal-theme). */
+  --font-display: var(--rl-font-display);
+  --font-sans: var(--rl-font-sans);
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  /* Type scale — fluid from 360px to 1440px viewports (DESIGN.md §3.1) */
+  --text-*: initial;
+  --text-display-xl: clamp(3rem, 1.833rem + 5.185vw, 6.5rem);
+  --text-display-xl--line-height: 1;
+  --text-display-xl--letter-spacing: -0.03em;
+  --text-display-xl--font-weight: 600;
+  --text-display: clamp(2.5rem, 1.833rem + 2.963vw, 4.5rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.025em;
+  --text-display--font-weight: 600;
+  --text-h1: clamp(2.25rem, 1.833rem + 1.852vw, 3.5rem);
+  --text-h1--line-height: 1.1;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h1--font-weight: 600;
+  --text-h2: clamp(1.875rem, 1.625rem + 1.111vw, 2.625rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.015em;
+  --text-h2--font-weight: 500;
+  --text-h3: clamp(1.375rem, 1.25rem + 0.556vw, 1.75rem);
+  --text-h3--line-height: 1.25;
+  --text-h3--letter-spacing: -0.01em;
+  --text-h3--font-weight: 500;
+  --text-h4: clamp(1.125rem, 1.0625rem + 0.278vw, 1.3125rem);
+  --text-h4--line-height: 1.35;
+  --text-h4--font-weight: 500;
+  --text-body-lg: clamp(1.125rem, 1.083rem + 0.185vw, 1.25rem);
+  --text-body-lg--line-height: 1.6;
+  --text-body: clamp(1rem, 0.979rem + 0.093vw, 1.0625rem);
+  --text-body--line-height: 1.6;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.5;
+  --text-tag: 0.8125rem;
+  --text-tag--line-height: 1.4;
+  --text-tag--font-weight: 500;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.12em;
+  --text-label--font-weight: 500;
+  --text-marquee: clamp(5rem, 2.5rem + 11.111vw, 12.5rem);
+  --text-marquee--line-height: 1;
+  --text-marquee--letter-spacing: -0.02em;
+  --text-marquee--font-weight: 500;
+
+  /* Dashboard scale: compact and fixed (no fluid marketing sizes inside portals). */
+  --text-dash-title: 1.625rem;
+  --text-dash-title--line-height: 1.2;
+  --text-dash-title--letter-spacing: -0.02em;
+  --text-dash-title--font-weight: 700;
+  --text-dash-heading: 1rem;
+  --text-dash-heading--line-height: 1.4;
+  --text-dash-heading--font-weight: 600;
+  --text-dash-kpi: 1.75rem;
+  --text-dash-kpi--line-height: 1.15;
+  --text-dash-kpi--letter-spacing: -0.02em;
+  --text-dash-kpi--font-weight: 700;
+  --text-dash-meta: 0.75rem;
+  --text-dash-meta--line-height: 1.4;
+  --text-dash-meta--font-weight: 500;
+
+  /* Layout */
+  --container-content: var(--rl-content-max);
+  --spacing-gutter: var(--rl-gutter);
+  --spacing-section: var(--rl-section);
+  --spacing-section-gap: var(--rl-section-gap);
+  --spacing-header: var(--rl-header-h);
+
+  /* Radius */
+  --radius-*: initial;
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-pill: var(--r-pill);
+}
+
+@theme {
+  /* Shadow (DESIGN.md §4) */
+  --shadow-*: initial;
+  --shadow-card: 0 1px 0 rgba(14, 23, 38, 0.06), 0 12px 40px -12px rgba(14, 23, 38, 0.18);
+  /* Dashboard cards: barely-there lift on the canvas. */
+  --shadow-soft: 0 1px 2px rgba(14, 23, 38, 0.04), 0 2px 8px -2px rgba(14, 23, 38, 0.05);
+
+  /* Easing (DESIGN.md §7.2) */
+  --ease-*: initial;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Durations from tokens */
+@utility duration-fast {
+  transition-duration: var(--dur-fast);
+}
+@utility duration-progress {
+  transition-duration: var(--dur-progress);
+}
+@utility duration-swap {
+  transition-duration: var(--dur-swap);
+}
+@utility duration-base {
+  transition-duration: var(--dur-base);
+}
+@utility duration-slow {
+  transition-duration: var(--dur-slow);
+}
+
+/* Page shell: max content width plus fluid side padding */
+@utility shell {
+  width: 100%;
+  max-width: calc(var(--rl-content-max) + 2 * var(--rl-gutter));
+  margin-inline: auto;
+  padding-inline: var(--rl-gutter);
+}
+
+@utility bg-gradient-logic {
+  background-image: var(--rl-gradient-logic);
+}
+@utility bg-gradient-deep {
+  background-image: var(--rl-gradient-deep);
+}
+@utility bg-gradient-soft {
+  background-image: var(--rl-gradient-soft);
+}
+@utility bg-gradient-glow {
+  background-image: var(--rl-gradient-glow);
+}
+@utility text-gradient {
+  background-image: var(--rl-gradient-text);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+@utility field-ring {
+  box-shadow:
+    0 0 0 1px var(--rl-navy-600),
+    0 0 0 5px color-mix(in srgb, var(--rl-sky-400) 22%, transparent);
+}
+@utility field-ring-error {
+  box-shadow:
+    0 0 0 1px var(--rl-error),
+    0 0 0 5px color-mix(in srgb, var(--rl-error) 16%, transparent);
+}
+@utility text-gradient-light {
+  background-image: linear-gradient(
+    90deg,
+    var(--rl-teal-300),
+    var(--rl-sky-400) 50%,
+    var(--rl-navy-300)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--rl-white);
+    color: var(--rl-ink);
+    font-family: var(--rl-font-sans);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--rl-font-display);
+    text-wrap: balance;
+  }
+
+  /* Two-tone focus ring: cyan outside, navy inside, so it reads on light and dark */
+  :focus-visible {
+    outline: 2px solid var(--rl-cyan-glow);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--rl-navy-900);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  label:has(> input:not(:disabled)),
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background-color: var(--rl-navy-900);
+    color: var(--rl-white);
+  }
+
+  dialog {
+    color: inherit;
+  }
+  dialog::backdrop {
+    background: color-mix(in srgb, var(--rl-navy-950) 60%, transparent);
+    backdrop-filter: blur(4px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  @media print {
+    [data-print-hide] {
+      display: none !important;
+    }
+  }
+}
+
+/* Logo and header foreground on dark surfaces */
+.on-dark {
+  --logo-real: var(--rl-teal-300);
+  --logo-o: var(--rl-sky-400);
+  --logo-gixs: var(--rl-navy-300);
+}
+
+/* Faint 48px line grid that fades out towards the edges (hero, intros). */
+@utility bg-grid {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--rl-navy-600) 7%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--rl-navy-600) 7%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 40%, transparent 100%);
+}
+@utility bg-grid-dark {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 100%);
+}
+
+/* Brand mesh: three soft blobs (teal, sky, navy) on deep navy. */
+@utility bg-mesh {
+  background-color: var(--rl-navy-900);
+  background-image:
+    radial-gradient(
+      40% 50% at 15% 20%,
+      color-mix(in srgb, var(--rl-teal-600) 70%, transparent) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      45% 55% at 85% 30%,
+      color-mix(in srgb, var(--rl-sky-400) 45%, transparent) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      50% 60% at 50% 100%,
+      color-mix(in srgb, var(--rl-navy-600) 90%, transparent) 0%,
+      transparent 70%
+    );
+}
+
+/* Frosted panel for content floating on dark or mesh backgrounds. */
+@utility glass {
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+@utility glass-light {
+  background-color: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 20px 50px -20px rgba(11, 20, 40, 0.35);
+}
+
+/* Above-the-fold entrance: pure CSS so it starts at first paint (no hide-then-show
+   flash, no LCP delay) and still plays without JS. Reduced motion shortens it to nothing. */
+@keyframes rl-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+@utility animate-fade-up {
+  animation: rl-fade-up var(--dur-slow) var(--ease-out-expo) both;
+  animation-delay: var(--delay, 0ms);
+}
+.rl-stagger > * {
+  animation: rl-fade-up var(--dur-slow) var(--ease-out-expo) both;
+}
+.rl-stagger > :nth-child(2) {
+  animation-delay: 70ms;
+}
+.rl-stagger > :nth-child(3) {
+  animation-delay: 140ms;
+}
+.rl-stagger > :nth-child(4) {
+  animation-delay: 210ms;
+}
+.rl-stagger > :nth-child(5) {
+  animation-delay: 280ms;
+}
+.rl-stagger > :nth-child(n + 6) {
+  animation-delay: 350ms;
+}
+
+/* Portals: Plus Jakarta Sans for headings and body, on a cool canvas. */
+.portal-theme {
+  --rl-font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --rl-font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--rl-font-sans);
+  letter-spacing: -0.005em;
+}

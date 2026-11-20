@@ -1,0 +1,107 @@
+/* Design tokens — mirrors DESIGN.md §2–4 and §7.2. Change values here only. */
+:root {
+  /* Brand */
+  --rl-teal-700: #14546a;
+  --rl-teal-600: #1b6a85;
+  --rl-ocean-500: #2a7fa3;
+  --rl-sky-400: #3d93c2;
+  --rl-sky-300: #6fb6db;
+  --rl-sky-100: #e3f1f9;
+  --rl-navy-600: #2a4373;
+  --rl-navy-800: #16244a;
+  --rl-navy-900: #0b1428;
+  --rl-navy-950: #070d1c;
+
+  /* Logo teal and navy lifted toward white, for text and the logo on dark surfaces
+     (the base colours are too dark to read on navy). */
+  --rl-teal-300: color-mix(in srgb, var(--rl-teal-600) 50%, var(--rl-white));
+  --rl-navy-300: color-mix(in srgb, var(--rl-navy-600) 40%, var(--rl-white));
+
+  /* Fonts (public site); portals override these in .portal-theme */
+  --rl-font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --rl-font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Dashboards: canvas behind cards, and the chart series colour (logo sky; passes the
+     dataviz lightness, chroma and contrast checks on white). */
+  --rl-canvas: #f5f7fa;
+  --rl-chart-1: var(--rl-sky-400);
+
+  /* Accent (focus rings, live states, tiny highlights only) */
+  --rl-cyan-glow: #5fd3f5;
+
+  /* Neutrals */
+  --rl-white: #ffffff;
+  --rl-mist: #f3f6f9;
+  --rl-line: #dce3ea;
+  --rl-line-dark: rgba(255, 255, 255, 0.12);
+  --rl-ink: #0e1726;
+  --rl-ink-soft: #4a5668;
+  --rl-on-dark: #e8eef5;
+  --rl-on-dark-soft: #9aa8bc;
+
+  /* Semantic */
+  --rl-success: #1f9d6b;
+  --rl-error: #d64545;
+  --rl-warning: #e0a100;
+  /* Darker variants for small text on white (the base colours fail 4.5:1) */
+  --rl-success-text: #157a52;
+  --rl-error-text: #b83232;
+  --rl-warning-text: #8a6100;
+
+  /* Gradients */
+  --rl-gradient-logic: linear-gradient(120deg, #1b6a85 0%, #3d93c2 48%, #2a4373 100%);
+  --rl-gradient-deep: linear-gradient(160deg, #0b1428 0%, #16244a 55%, #1b6a85 100%);
+  --rl-gradient-glow: radial-gradient(
+    60% 60% at 70% 30%,
+    rgba(95, 211, 245, 0.35) 0%,
+    rgba(61, 147, 194, 0) 70%
+  );
+  /* Light wash of the logo colours for sections that carry body text (hero). */
+  --rl-gradient-soft: linear-gradient(
+    120deg,
+    var(--rl-sky-100) 0%,
+    var(--rl-white) 46%,
+    color-mix(in srgb, var(--rl-teal-600) 14%, var(--rl-white)) 100%
+  );
+  --rl-gradient-text: linear-gradient(90deg, #1b6a85, #3d93c2 50%, #2a4373);
+
+  /* Layout */
+  --rl-content-max: 1320px;
+  --rl-gutter: clamp(20px, 5vw, 80px);
+  /* Vertical section padding: 56px on phones → 96px on wide screens. */
+  --rl-section: clamp(56px, 7vw, 96px);
+  --rl-section-gap: clamp(28px, 3.5vw, 48px);
+  --rl-header-h: 64px;
+
+  /* Radius */
+  --r-sm: 8px;
+  --r-md: 16px;
+  --r-lg: 28px;
+  --r-pill: 999px;
+
+  /* Shadow and easing tokens (--shadow-card, --ease-out-expo, --ease-in-out,
+     --ease-standard) are declared in globals.css @theme, which also emits them here. */
+
+  /* Motion */
+  --dur-fast: 200ms;
+  --dur-progress: 600ms; /* M18 progress bar */
+  --dur-swap: 350ms; /* M6 button arrow swap */
+  --dur-base: 400ms;
+  --dur-slow: 800ms;
+  --dur-xslow: 1200ms;
+  --stagger: 60ms;
+
+  /* Logo gradient stops (overridden on dark surfaces) */
+  --logo-real: var(--rl-teal-600);
+  --logo-o: var(--rl-sky-400);
+  --logo-gixs: var(--rl-navy-600);
+
+  /* Header foreground (overridden over dark heroes) */
+  --header-fg: var(--rl-ink);
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --rl-header-h: 76px;
+  }
+}
