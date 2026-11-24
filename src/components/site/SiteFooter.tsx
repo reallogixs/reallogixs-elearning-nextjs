@@ -37,10 +37,13 @@ export function SiteFooter(): ReactElement {
       <div className="shell flex flex-col gap-12 py-16 lg:py-20">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <p className="max-w-2xl font-display text-h1 text-white">
-            Learn something <span className="text-gradient-light">real.</span>
+            {content.footer.headline}{" "}
+            {content.footer.highlight ? (
+              <span className="text-gradient-light">{content.footer.highlight}</span>
+            ) : null}
           </p>
           <Button href="/courses" tone="dark" arrow>
-            Browse courses
+            {content.footer.ctaLabel}
           </Button>
         </div>
 
@@ -89,7 +92,7 @@ export function SiteFooter(): ReactElement {
             href="https://reallogixs.com.au"
             className="inline-flex min-h-11 items-center hover:text-white"
           >
-            A Reallogixs initiative · reallogixs.com.au
+            {content.footer.tagline}
           </a>
         </div>
       </div>

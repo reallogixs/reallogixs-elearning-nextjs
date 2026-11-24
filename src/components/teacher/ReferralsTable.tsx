@@ -43,7 +43,7 @@ export function ReferralsTable({ db, orders }: { db: Database; orders: Order[] }
         {
           key: "date",
           header: "Date",
-          hideBelow: "md",
+          hideBelow: "xl",
           cell: (order) => formatDate(order.createdAt),
         },
         {

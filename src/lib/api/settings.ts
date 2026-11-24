@@ -85,6 +85,19 @@ export async function saveContent<K extends keyof SiteContent>(
   return ok(undefined);
 }
 
+/** Saves one entry of a grouped content area (one home section, or one page) without touching the others. */
+export async function saveContentEntry<
+  G extends "sections" | "pages",
+  K extends keyof SiteContent[G],
+>(group: G, key: K, value: SiteContent[G][K]): Promise<Result> {
+  await latency();
+  write((db) => ({
+    ...db,
+    content: { ...db.content, [group]: { ...db.content[group], [key]: value } },
+  }));
+  return ok(undefined);
+}
+
 /* Certificates ----------------------------------------------------------- */
 
 export async function issueCertificate(orderId: string): Promise<Result<Certificate>> {

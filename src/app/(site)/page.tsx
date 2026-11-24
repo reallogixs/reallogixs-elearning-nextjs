@@ -7,6 +7,8 @@ import { FaqSection } from "@/components/home/FaqSection";
 import { FeaturedCourses } from "@/components/home/FeaturedCourses";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HowItWorks } from "@/components/home/HowItWorks";
+import { SkillsMarquee } from "@/components/home/SkillsMarquee";
+import { StatsSection } from "@/components/home/StatsSection";
 import { Testimonials } from "@/components/home/Testimonials";
 
 export const metadata: Metadata = {
@@ -19,8 +21,10 @@ export default function HomePage(): ReactElement {
     <>
       <HomeHero />
       <FeaturedCourses />
+      <SkillsMarquee />
       <CategoryShowcase />
       <HowItWorks />
+      <StatsSection />
       <Testimonials />
       <FaqSection />
     </>

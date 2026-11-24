@@ -3,4 +3,6 @@ export interface ContentField<T extends object> {
   label: string;
   kind?: "text" | "multiline" | "url" | "boolean";
   hint?: string;
+  /** Shown as "(optional)"; the Yup schema allows it to be empty. */
+  optional?: boolean;
 }

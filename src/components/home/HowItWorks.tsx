@@ -5,19 +5,15 @@ import type { ReactElement } from "react";
 import { useDb } from "@/lib/store/hooks";
 import { Reveal } from "@/components/motion/Reveal";
 import { Section } from "@/components/ui/Section";
-import { SectionHeading } from "@/components/ui/SectionHeading";
+
+import { ContentHeading } from "./ContentHeading";
 
 export function HowItWorks(): ReactElement {
-  const { steps } = useDb().content;
+  const { steps, sections } = useDb().content;
   return (
     <Section id="how-it-works" tone="mesh" labelledBy="how-title">
       <div aria-hidden="true" className="absolute inset-0 bg-grid-dark" />
-      <SectionHeading
-        id="how-title"
-        tone="dark"
-        label="How it works"
-        title="From browsing to your first class in four steps"
-      />
+      <ContentHeading id="how-title" tone="dark" copy={sections.howItWorks} />
       <Reveal as="ol" stagger className="relative grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {steps.map((step, index) => (
           <li key={step.title} className="relative flex flex-col gap-4 rounded-md glass p-6">

@@ -8,7 +8,7 @@ export interface Column<T> {
   cell: (row: T) => ReactNode;
   className?: string;
   /** Hide on medium screens; the row stays readable through the remaining cells. */
-  hideBelow?: "md" | "lg" | "xl";
+  hideBelow?: "md" | "lg" | "xl" | "2xl";
   /** Let long text wrap (cells stay on one line by default). */
   wrap?: boolean;
   /** On phones each row is a card: the first column is its title; "hidden" leaves a column out. */
@@ -27,6 +27,7 @@ const hide = {
   md: "hidden md:table-cell",
   lg: "hidden lg:table-cell",
   xl: "hidden xl:table-cell",
+  "2xl": "hidden 2xl:table-cell",
 } as const;
 
 /** Columns whose key is "actions" sit at the bottom of the mobile card. */

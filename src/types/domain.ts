@@ -232,14 +232,57 @@ export interface Stat {
 }
 
 /** Every editable piece of public copy. Managed from Admin → Site content. */
+/** Heading block of a home section. `highlight` is shown in the brand gradient after the title. */
+export interface SectionCopy {
+  label: string;
+  title: string;
+  highlight: string;
+  description: string;
+}
+
+/** Intro block at the top of a page (and the brand panel on login/signup). */
+export interface PageCopy {
+  label: string;
+  title: string;
+  body: string;
+}
+
+export interface AuthPageCopy extends PageCopy {
+  asideTitle: string;
+  asideBody: string;
+}
+
 export interface SiteContent {
   hero: {
+    badge: string;
     eyebrow: string;
     title: string;
     highlight: string;
     subtitle: string;
     primaryCta: string;
     secondaryCta: string;
+    upcomingLabel: string;
+  };
+  /** Headings of each home section. */
+  sections: {
+    featured: SectionCopy;
+    categories: SectionCopy;
+    howItWorks: SectionCopy;
+    stats: SectionCopy;
+    testimonials: SectionCopy;
+    faq: SectionCopy;
+  };
+  pages: {
+    courses: PageCopy;
+    track: PageCopy;
+    login: AuthPageCopy;
+    signup: AuthPageCopy;
+  };
+  coursePage: {
+    aboutLabel: string;
+    outcomesLabel: string;
+    instructorLabel: string;
+    enrolNote: string;
   };
   stats: Stat[];
   steps: Step[];
@@ -262,7 +305,11 @@ export interface SiteContent {
     pendingMessage: string;
   };
   footer: {
+    headline: string;
+    highlight: string;
+    ctaLabel: string;
     blurb: string;
+    tagline: string;
   };
 }
 

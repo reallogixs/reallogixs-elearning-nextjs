@@ -67,11 +67,11 @@ export function CourseDetail({ slug }: { slug: string }): ReactElement {
       <section className="shell grid gap-12 py-12 lg:grid-cols-[1fr_380px] lg:py-16">
         <div className="flex flex-col gap-12">
           <div className="flex flex-col gap-4">
-            <SectionLabel>About this course</SectionLabel>
+            <SectionLabel>{db.content.coursePage.aboutLabel}</SectionLabel>
             <p className="text-body-lg">{course.description}</p>
           </div>
           <div className="flex flex-col gap-4">
-            <SectionLabel>What you&apos;ll be able to do</SectionLabel>
+            <SectionLabel>{db.content.coursePage.outcomesLabel}</SectionLabel>
             <ul className="grid gap-3 sm:grid-cols-2">
               {course.outcomes.map((outcome) => (
                 <li key={outcome} className="flex gap-3 rounded-md bg-mist p-4">
@@ -86,7 +86,7 @@ export function CourseDetail({ slug }: { slug: string }): ReactElement {
           </div>
           {instructor ? (
             <div className="flex flex-col gap-4">
-              <SectionLabel>Your instructor</SectionLabel>
+              <SectionLabel>{db.content.coursePage.instructorLabel}</SectionLabel>
               <InstructorCard instructor={instructor} />
             </div>
           ) : null}
@@ -103,7 +103,12 @@ export function CourseDetail({ slug }: { slug: string }): ReactElement {
               {left} of {course.seats} seats left
             </p>
             {state === "open" ? (
-              <Button href={`/checkout/${course.slug}`} size="lg" arrow className="hidden w-full lg:inline-flex">
+              <Button
+                href={`/checkout/${course.slug}`}
+                size="lg"
+                arrow
+                className="hidden w-full lg:inline-flex"
+              >
                 Enrol now
               </Button>
             ) : (
@@ -111,9 +116,7 @@ export function CourseDetail({ slug }: { slug: string }): ReactElement {
                 {ENROLMENT_LABEL[state]}
               </Button>
             )}
-            <p className="text-small text-ink-soft">
-              No account needed. Pay by JazzCash, Easypaisa, SadaPay, NayaPay or bank transfer.
-            </p>
+            <p className="text-small text-ink-soft">{db.content.coursePage.enrolNote}</p>
             <CourseFacts course={course} />
           </div>
         </aside>

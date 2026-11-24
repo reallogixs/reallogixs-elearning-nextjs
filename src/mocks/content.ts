@@ -3,6 +3,7 @@ import type { SiteContent } from "@/types/domain";
 /** Default public copy. Admins edit all of it from Admin → Site content. */
 export const siteContent: SiteContent = {
   hero: {
+    badge: "New",
     eyebrow: "Reallogixs Academy",
     title: "Learn the skills that build",
     highlight: "real products.",
@@ -10,6 +11,80 @@ export const siteContent: SiteContent = {
       "Live, mentor-led courses in software, AI, design and marketing, taught by the engineers who ship client work at Reallogixs. Join on campus in Lahore or online from anywhere.",
     primaryCta: "Browse courses",
     secondaryCta: "Track my enrolment",
+    upcomingLabel: "Enrolling now",
+  },
+  sections: {
+    featured: {
+      label: "Featured courses",
+      title: "Next batches starting soon",
+      highlight: "",
+      description: "Small, live batches with a mentor who ships real client work.",
+    },
+    categories: {
+      label: "Explore by category",
+      title: "Pick a path, then go deep",
+      highlight: "",
+      description:
+        "Every category nests into focused tracks, so you can start broad and specialise.",
+    },
+    howItWorks: {
+      label: "How it works",
+      title: "From browsing to your first class in four steps",
+      highlight: "",
+      description: "",
+    },
+    stats: {
+      label: "By the numbers",
+      title: "Small batches.",
+      highlight: "Real outcomes.",
+      description: "",
+    },
+    testimonials: {
+      label: "Student stories",
+      title: "Don't take our word.",
+      highlight: "Take theirs.",
+      description: "Students who joined a batch, built something real and kept going.",
+    },
+    faq: {
+      label: "FAQ",
+      title: "Questions, answered",
+      highlight: "",
+      description: "Can't find what you need? We reply quickly.",
+    },
+  },
+  pages: {
+    courses: {
+      label: "Courses",
+      title: "Find your next skill",
+      body: "Live, mentor-led batches with real projects. Pick a category, choose online or on campus, and enrol in minutes.",
+    },
+    track: {
+      label: "Track enrolment",
+      title: "Where's my enrolment?",
+      body: "Enter the order number from checkout and the phone number you used. Demo: try RLX-9GUEST with 0344 1112233.",
+    },
+    login: {
+      label: "Welcome back",
+      title: "Log in",
+      body: "Students, teachers and admins all log in here. Teacher accounts are created by the Reallogixs team.",
+      asideTitle: "One login, three portals.",
+      asideBody:
+        "Students see their courses and receipts. Teachers see referrals and earnings. Admins run the academy.",
+    },
+    signup: {
+      label: "Student account",
+      title: "Keep your learning in one place",
+      body: "An account is optional. It lets you see every enrolment, receipt and certificate together. Earlier orders made with the same email or phone are added automatically.",
+      asideTitle: "Your history, receipts and certificates.",
+      asideBody:
+        "Re-upload a receipt, find your WhatsApp community link and download certificates any time.",
+    },
+  },
+  coursePage: {
+    aboutLabel: "About this course",
+    outcomesLabel: "What you'll be able to do",
+    instructorLabel: "Your instructor",
+    enrolNote: "No account needed. Pay by JazzCash, Easypaisa, SadaPay, NayaPay or bank transfer.",
   },
   stats: [
     // PLACEHOLDER: replace with real numbers before launch.
@@ -113,6 +188,10 @@ export const siteContent: SiteContent = {
       "Thanks! We've received your receipt. Our team will verify it shortly and you'll see your WhatsApp community link here once it's confirmed.",
   },
   footer: {
+    headline: "Learn something",
+    highlight: "real.",
+    ctaLabel: "Browse courses",
+    tagline: "A Reallogixs initiative · reallogixs.com.au",
     blurb:
       "Reallogixs Academy is the learning initiative of Reallogixs, a software and AI agency building for clients in Australia and around the world.",
   },

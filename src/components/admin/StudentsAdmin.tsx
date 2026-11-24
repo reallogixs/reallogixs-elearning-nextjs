@@ -87,8 +87,8 @@ export function StudentsAdmin(): ReactElement {
             header: "Name",
             cell: (row) => <span className="font-medium">{row.name}</span>,
           },
-          { key: "email", header: "Email", hideBelow: "md", cell: (row) => row.email },
-          { key: "phone", header: "Phone", hideBelow: "lg", cell: (row) => row.phone },
+          { key: "email", header: "Email", hideBelow: "xl", cell: (row) => row.email },
+          { key: "phone", header: "Phone", hideBelow: "xl", cell: (row) => row.phone },
           {
             key: "account",
             header: "Account",
@@ -102,8 +102,8 @@ export function StudentsAdmin(): ReactElement {
           {
             key: "paid",
             header: "Paid",
+            hideBelow: "xl",
             className: "text-right",
-            hideBelow: "md",
             cell: (row) => formatPKR(row.paid),
           },
         ]}

@@ -52,7 +52,7 @@ export function PortalTopbar({ role, menuOpen, onOpenMenu }: PortalTopbarProps):
       <div className="flex items-center gap-1 sm:gap-2">
         <Link
           href="/"
-          className="hidden min-h-10 items-center gap-1.5 rounded-pill px-3 text-small font-medium text-ink-soft hover:bg-canvas hover:text-ink sm:inline-flex"
+          className="hidden min-h-11 items-center gap-1.5 rounded-pill px-3 text-small font-medium text-ink-soft hover:bg-canvas hover:text-ink sm:inline-flex"
         >
           View site <ExternalLink aria-hidden="true" className="size-3.5" />
         </Link>

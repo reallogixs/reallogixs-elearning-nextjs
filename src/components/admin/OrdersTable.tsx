@@ -51,7 +51,6 @@ export function OrdersTable({
           header: "Course",
           hideBelow: "xl",
           wrap: true,
-          className: "min-w-48",
           cell: (order) => courseById(db, order.courseId)?.title ?? "—",
         },
         {

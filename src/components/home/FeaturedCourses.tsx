@@ -8,19 +8,19 @@ import { ConnectedCourseCard } from "@/components/courses/ConnectedCourseCard";
 import { Reveal } from "@/components/motion/Reveal";
 import { Button } from "@/components/ui/Button";
 import { Section } from "@/components/ui/Section";
-import { SectionHeading } from "@/components/ui/SectionHeading";
+
+import { ContentHeading } from "./ContentHeading";
 
 export function FeaturedCourses(): ReactElement {
-  const featured = publishedCourses(useDb())
+  const db = useDb();
+  const featured = publishedCourses(db)
     .filter((course) => course.featured)
     .slice(0, 3);
   return (
     <Section labelledBy="featured-title">
-      <SectionHeading
+      <ContentHeading
         id="featured-title"
-        label="Featured courses"
-        title="Next batches starting soon"
-        description="Small, live batches with a mentor who ships real client work."
+        copy={db.content.sections.featured}
         action={
           <Button href="/courses" variant="secondary" arrow>
             All courses

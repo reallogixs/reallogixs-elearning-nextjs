@@ -18,7 +18,8 @@ import { useDb } from "@/lib/store/hooks";
 import { publishedCourses } from "@/lib/store/selectors";
 import { Reveal } from "@/components/motion/Reveal";
 import { Section } from "@/components/ui/Section";
-import { SectionHeading } from "@/components/ui/SectionHeading";
+
+import { ContentHeading } from "./ContentHeading";
 
 /** Icons for the seeded top-level categories; anything new falls back to a generic shape. */
 const ICONS: Record<string, LucideIcon> = {
@@ -39,12 +40,7 @@ export function CategoryShowcase(): ReactElement {
 
   return (
     <Section tone="mist" labelledBy="categories-title">
-      <SectionHeading
-        id="categories-title"
-        label="Explore by category"
-        title="Pick a path, then go deep"
-        description="Every category nests into focused tracks, so you can start broad and specialise."
-      />
+      <ContentHeading id="categories-title" copy={db.content.sections.categories} />
       <Reveal stagger className="grid auto-rows-fr gap-4 md:grid-cols-2 lg:grid-cols-3">
         {tree.map((category, index) => {
           const Icon = ICONS[category.slug] ?? Shapes;

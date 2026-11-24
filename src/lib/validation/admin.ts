@@ -51,8 +51,9 @@ export type CourseFormValues = yup.InferType<typeof courseSchema>;
 export const categorySchema = yup.object({
   name: requiredText("Add a name.").min(2, "Add a name."),
   slug: slugSchema,
-  parentId: yup.string().defined(),
-  description: yup.string().trim().max(200, "Keep it under 200 characters.").defined(),
+  /** "" means top level. Formik sends empty fields as undefined, so default to "". */
+  parentId: yup.string().default(""),
+  description: yup.string().trim().max(200, "Keep it under 200 characters.").default(""),
 });
 export type CategoryFormValues = yup.InferType<typeof categorySchema>;
 
@@ -71,7 +72,7 @@ export const teacherSchema = yup.object({
     .string()
     .trim()
     .uppercase()
-    .defined()
+    .default("")
     .matches(/^([A-Z0-9-]{4,16})?$/, "4–16 letters, numbers or dashes."),
   commissionPct: percentSchema,
   discountPct: percentSchema,
@@ -99,7 +100,7 @@ export const paymentFieldSchema = yup.object({
 
 export const paymentMethodSchema = yup.object({
   name: requiredText("Add the method name, e.g. JazzCash."),
-  logoUrl: yup.string().nullable().defined(),
+  logoUrl: yup.string().nullable().default(null),
   fields: yup
     .array(paymentFieldSchema)
     .required()

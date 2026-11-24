@@ -42,6 +42,7 @@ export function CoursesAdmin(): ReactElement {
           {
             key: "title",
             header: "Course",
+            wrap: true,
             cell: (course) => (
               <div className="flex flex-col gap-1">
                 <Link
@@ -60,13 +61,13 @@ export function CoursesAdmin(): ReactElement {
           {
             key: "mode",
             header: "Mode",
-            hideBelow: "lg",
+            hideBelow: "xl",
             cell: (course) => MODE_LABEL[course.mode],
           },
           {
             key: "start",
             header: "Starts",
-            hideBelow: "md",
+            hideBelow: "xl",
             cell: (course) => formatDate(course.startDate),
           },
           {
@@ -77,7 +78,7 @@ export function CoursesAdmin(): ReactElement {
           {
             key: "price",
             header: "Price",
-            hideBelow: "md",
+            hideBelow: "xl",
             cell: (course) => formatPKR(course.price),
           },
           {

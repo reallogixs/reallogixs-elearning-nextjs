@@ -7,7 +7,8 @@ import { Logo } from "./Logo";
 
 interface BrandMarkProps {
   href?: string;
-  tone?: "light" | "dark";
+  /** "header" follows the site header's --header-* colours (light or over a dark hero). */
+  tone?: "light" | "dark" | "header";
   /** Small mono tag after the logo, e.g. "Academy" or "Admin". */
   tag?: string;
   className?: string;
@@ -35,7 +36,11 @@ export function BrandMark({
         aria-hidden="true"
         className={cn(
           "rounded-pill border px-2 py-0.5 font-mono text-[0.6875rem] tracking-[0.12em] uppercase",
-          tone === "dark" ? "border-line-dark text-on-dark-soft" : "border-line text-ink-soft",
+          tone === "dark"
+            ? "border-line-dark text-on-dark-soft"
+            : tone === "header"
+              ? "border-current/25 text-[var(--header-fg-soft)]"
+              : "border-line text-ink-soft",
         )}
       >
         {tag}

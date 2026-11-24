@@ -24,7 +24,12 @@ export function MobileNav(): ReactElement {
 
   return (
     <div className="lg:hidden">
-      <IconButton label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
+      <IconButton
+        label="Open menu"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+        className="text-[var(--header-fg)] hover:bg-[var(--header-hover)]"
+      >
         <Menu className="size-5" />
       </IconButton>
       <Drawer

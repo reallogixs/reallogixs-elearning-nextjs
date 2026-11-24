@@ -18,21 +18,24 @@ export function ContentFieldInput<T extends object>({
 }): ReactElement {
   if (field.kind === "boolean")
     return <SwitchField name={name} label={field.label} description={field.hint} />;
-  if (field.kind === "multiline")
+  if (field.kind === "multiline") {
     return (
       <TextareaField
         name={name}
         label={field.label}
         hint={field.hint}
+        optional={field.optional}
         rows={3}
         fieldClassName="md:col-span-2"
       />
     );
+  }
   return (
     <TextField
       name={name}
       label={field.label}
       hint={field.hint}
+      optional={field.optional}
       type={field.kind === "url" ? "url" : "text"}
     />
   );

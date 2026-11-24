@@ -4,13 +4,45 @@ import { emailSchema, requiredText } from "./shared";
 
 const text = (label: string) => requiredText(`${label} can't be empty.`);
 
+/** Optional copy: may be left empty, but not too long. */
+const optionalText = (max: number) =>
+  // Formik sends empty fields as undefined; default("") keeps them as empty strings.
+  yup.string().trim().max(max, `Keep it under ${max} characters.`).default("");
+
 export const heroSchema = yup.object({
+  badge: text("Badge").max(12, "Keep the badge under 12 characters."),
   eyebrow: text("Label"),
   title: text("Headline"),
   highlight: text("Highlighted words"),
   subtitle: text("Intro"),
   primaryCta: text("Main button"),
   secondaryCta: text("Second button"),
+  upcomingLabel: text("Upcoming batches label"),
+});
+
+export const sectionCopySchema = yup.object({
+  label: text("Label"),
+  title: text("Heading"),
+  highlight: optionalText(60),
+  description: optionalText(220),
+});
+
+export const pageCopySchema = yup.object({
+  label: text("Label"),
+  title: text("Heading"),
+  body: text("Intro"),
+});
+
+export const authPageCopySchema = pageCopySchema.shape({
+  asideTitle: text("Panel heading"),
+  asideBody: text("Panel text"),
+});
+
+export const coursePageSchema = yup.object({
+  aboutLabel: text("Description label"),
+  outcomesLabel: text("Outcomes label"),
+  instructorLabel: text("Instructor label"),
+  enrolNote: text("Enrol note"),
 });
 
 export const communitySchema = yup.object({
@@ -40,7 +72,13 @@ export const checkoutContentSchema = yup.object({
   pendingMessage: text("Message"),
 });
 
-export const footerSchema = yup.object({ blurb: text("About text") });
+export const footerSchema = yup.object({
+  headline: text("Headline"),
+  highlight: optionalText(40),
+  ctaLabel: text("Button"),
+  blurb: text("About text"),
+  tagline: text("Bottom line"),
+});
 
 export const statsSchema = yup.object({
   items: yup.array(yup.object({ value: text("Number"), label: text("Label") })).required(),

@@ -55,19 +55,19 @@ export function TeachersAdmin(): ReactElement {
           {
             key: "rates",
             header: "Commission / discount",
-            hideBelow: "md",
+            hideBelow: "xl",
             cell: (teacher) => `${teacher.commissionPct}% / ${teacher.discountPct}%`,
           },
           {
             key: "referrals",
             header: "Confirmed",
-            hideBelow: "lg",
+            hideBelow: "2xl",
             cell: (teacher) => teacherSummary(db, teacher.id).confirmed,
           },
           {
             key: "due",
             header: "Due",
-            hideBelow: "md",
+            hideBelow: "xl",
             cell: (teacher) => formatPKR(teacherSummary(db, teacher.id).due),
           },
           {
