@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 export const metadata = buildMetadata({
   title: "Courses",
   description:
-    "Browse live courses in web development, AI, design and digital marketing. Filter by category and learn online or on campus in Lahore.",
+    "Browse live courses in web development, AI, design and digital marketing. Filter by category and join live on Zoom.",
   path: "/courses",
 });
 

@@ -31,6 +31,14 @@ export function PagesContentTab({ content }: { content: SiteContent }): ReactEle
         onSave={(value) => settingsApi.saveContentEntry("pages", "track", value)}
       />
       <ContentSection
+        title="Verify certificate page"
+        description="Intro at the top of /verify."
+        value={pages.verify}
+        fields={PAGE_FIELDS}
+        schema={pageCopySchema}
+        onSave={(value) => settingsApi.saveContentEntry("pages", "verify", value)}
+      />
+      <ContentSection
         title="Log in page"
         value={pages.login}
         fields={AUTH_PAGE_FIELDS}

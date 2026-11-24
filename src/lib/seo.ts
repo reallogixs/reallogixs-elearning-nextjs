@@ -4,7 +4,7 @@ export const SITE = {
   name: "Reallogixs Academy",
   url: "https://academy.reallogixs.com",
   description:
-    "Live, mentor-led courses in software, AI, design and marketing from Reallogixs. Learn online or on campus in Lahore and pay with JazzCash, Easypaisa, SadaPay, NayaPay or bank transfer.",
+    "Live, mentor-led courses in software, AI, design and marketing from Reallogixs. Join live on Zoom and pay with JazzCash, Easypaisa, SadaPay, NayaPay or bank transfer.",
 } as const;
 
 interface MetaInput {

@@ -44,7 +44,7 @@ export function DetailsStep({
             type="email"
             autoComplete="email"
             readOnly={lockEmail}
-            hint="Your receipt and updates go here."
+            hint="Use the email of your Zoom account. Only that account can join the class."
           />
           <TextField
             name="phone"

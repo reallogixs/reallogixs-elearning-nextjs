@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, type ReactElement } from "react";
-import { Mail } from "lucide-react";
+import { Mail, Paperclip } from "lucide-react";
 
 import type { OutboxEmail } from "@/types/domain";
 import { formatDateTime } from "@/lib/domain/format";
 import { useDb } from "@/lib/store/hooks";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
@@ -67,6 +68,19 @@ export function OutboxAdmin(): ReactElement {
         description={open ? `To ${open.to}` : undefined}
       >
         <pre className="font-sans text-body whitespace-pre-wrap">{open?.body}</pre>
+        {open?.attachments?.map((file) => (
+          <Button
+            key={file.href}
+            href={file.href}
+            target="_blank"
+            size="sm"
+            variant="secondary"
+            icon={<Paperclip className="size-4" />}
+            className="mt-5"
+          >
+            {file.name}
+          </Button>
+        ))}
       </Modal>
     </>
   );

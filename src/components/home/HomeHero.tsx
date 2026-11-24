@@ -17,7 +17,7 @@ function delay(ms: number): CSSProperties {
 
 /**
  * Home hero in the main site's style: dark night sky, a glowing planet horizon rising
- * from the bottom, centred copy with a line-by-line reveal, and the next batches.
+ * from the bottom, centred copy with a line-by-line reveal, and the next classes.
  * The header turns transparent over it (data-header-tone="dark").
  */
 export function HomeHero(): ReactElement {
@@ -25,7 +25,7 @@ export function HomeHero(): ReactElement {
   const { hero } = db.content;
   const upcoming = publishedCourses(db)
     .filter((course) => course.enrolmentOpen)
-    .sort((a, b) => a.startDate.localeCompare(b.startDate))
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
     .slice(0, 3);
 
   return (
@@ -99,7 +99,7 @@ export function HomeHero(): ReactElement {
                         {course.title}
                       </span>
                       <span className="block text-[0.8125rem] text-on-dark-soft">
-                        {formatShortDate(course.startDate)} · {MODE_LABEL[course.mode]}
+                        {formatShortDate(course.startsAt)} · {MODE_LABEL[course.mode]}
                       </span>
                     </span>
                     <ArrowUpRight

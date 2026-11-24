@@ -1,10 +1,29 @@
-import type { Course, Database, Order, StudentUser, TeacherUser } from "@/types/domain";
+import type {
+  Certificate,
+  Course,
+  Database,
+  Meeting,
+  Order,
+  StudentUser,
+  TeacherUser,
+} from "@/types/domain";
 import { normalisePhone } from "@/lib/domain/format";
 
 /** Pure read helpers over the database snapshot. Supabase queries replace these later. */
 
 export function publishedCourses(db: Database): Course[] {
-  return db.courses.filter((course) => course.status === "published");
+  const completed = new Set(
+    db.meetings.filter((meeting) => meeting.completedAt).map((meeting) => meeting.courseId),
+  );
+  return db.courses.filter((course) => course.status === "published" && !completed.has(course.id));
+}
+
+export function meetingFor(db: Database, courseId: string): Meeting | undefined {
+  return db.meetings.find((meeting) => meeting.courseId === courseId);
+}
+
+export function certificateForOrder(db: Database, orderId: string): Certificate | undefined {
+  return db.certificates.find((certificate) => certificate.orderId === orderId);
 }
 
 export function courseBySlug(db: Database, slug: string): Course | undefined {

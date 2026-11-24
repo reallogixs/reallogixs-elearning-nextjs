@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight, CalendarDays, Clock } from "lucide-react";
 
 import type { Category, Course, Instructor } from "@/types/domain";
-import { formatDate, formatPKR, initials } from "@/lib/domain/format";
+import { formatDate, formatDuration, formatPKR, initials } from "@/lib/domain/format";
 import type { EnrolmentState } from "@/lib/domain/orders";
 
 import { CourseCover } from "./CourseCover";
@@ -43,11 +43,11 @@ export function CourseCard({
         <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-small text-ink-soft">
           <li className="flex items-center gap-1.5">
             <CalendarDays aria-hidden="true" className="size-4 text-teal-600" />
-            {formatDate(course.startDate)}
+            {formatDate(course.startsAt)}
           </li>
           <li className="flex items-center gap-1.5">
             <Clock aria-hidden="true" className="size-4 text-teal-600" />
-            {course.durationWeeks} weeks
+            {formatDuration(course.durationMinutes)}
           </li>
         </ul>
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-4">

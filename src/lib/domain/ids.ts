@@ -31,5 +31,17 @@ export function newTempPassword(): string {
 }
 
 export function newCertificateCode(): string {
-  return `CERT-${randomChars(6)}`;
+  return `CERT-${randomChars(8)}`;
+}
+
+/** Unguessable secret for a personal join link. */
+export function newJoinToken(): string {
+  return randomChars(24).toLowerCase();
+}
+
+/** 11 digits, like a Zoom meeting id. */
+export function newZoomId(): string {
+  const bytes = new Uint8Array(10);
+  crypto.getRandomValues(bytes);
+  return `8${Array.from(bytes, (byte) => byte % 10).join("")}`;
 }

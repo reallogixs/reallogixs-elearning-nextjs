@@ -13,6 +13,10 @@ Read `README.md` first (flows, structure, demo accounts, backend migration map).
   The mock API re-runs the same schema with `validateWith()`, as the server will.
 - **Mock backend for now.** All data lives in `localStorage` via `src/lib/store`. Do not add
   Supabase/Cloudinary/SMTP until asked; the swap points are listed in the README.
+- **Courses are single online masterclasses** (`startsAt` + `durationMinutes`, Pakistan time). Every
+  course has one Zoom meeting, created with it. `lib/domain/meeting.ts` is the only door and
+  attendance policy; `lib/zoom/client.ts` is the only file that talks to Zoom (simulated).
+  Certificates are created only by `completeClass()`, never by hand.
 - **Lighter motion.** GSAP `Reveal` (fade-up on scroll) for content below the fold. Above the fold
   (hero, page intros) use the CSS `rl-stagger` / `animate-fade-up` entrance so nothing is hidden
   waiting for JS. The home page borrows the main site's signatures: dark `bg-hero-night` hero with the

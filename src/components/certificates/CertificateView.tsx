@@ -17,14 +17,24 @@ export function CertificateView({ code }: { code: string }): ReactElement {
   const hydrated = useHydrated();
   const certificate = db.certificates.find((candidate) => candidate.code === code.toUpperCase());
 
+  if (certificate?.revokedAt)
+    return (
+      <NotFoundState
+        title="Certificate revoked"
+        body="Reallogixs issued this certificate, but it is no longer valid."
+        href="/verify"
+        cta="Verify another"
+      />
+    );
+
   if (!certificate) {
     if (!hydrated) return <Skeleton className="m-8 h-96" />;
     return (
       <NotFoundState
         title="Certificate not found"
         body="Check the verification code and try again."
-        href="/"
-        cta="Go home"
+        href="/verify"
+        cta="Verify a code"
       />
     );
   }
@@ -35,8 +45,8 @@ export function CertificateView({ code }: { code: string }): ReactElement {
         <Button size="sm" icon={<Printer className="size-4" />} onClick={() => window.print()}>
           Print or save as PDF
         </Button>
-        <Button size="sm" variant="secondary" href="/">
-          Academy home
+        <Button size="sm" variant="secondary" href={`/verify?code=${certificate.code}`}>
+          Verify
         </Button>
       </div>
       <article className="flex aspect-[1.414] w-full max-w-4xl flex-col justify-between rounded-lg border border-line bg-white p-8 sm:p-14 print:rounded-none print:border-0">
@@ -47,7 +57,7 @@ export function CertificateView({ code }: { code: string }): ReactElement {
         <div className="flex flex-col gap-4 text-center">
           <p className="text-ink-soft">This certifies that</p>
           <h1 className="text-h1">{certificate.studentName}</h1>
-          <p className="text-ink-soft">has successfully completed</p>
+          <p className="text-ink-soft">attended the live masterclass</p>
           <p className="text-gradient font-display text-h3">{certificate.courseTitle}</p>
         </div>
         <div className="flex flex-col gap-4">

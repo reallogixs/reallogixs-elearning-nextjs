@@ -30,11 +30,12 @@ export const courseSchema = yup.object({
   ),
   categoryId: yup.string().required("Choose a category."),
   instructorId: yup.string().required("Choose an instructor."),
-  mode: yup.mixed<"physical" | "online">().oneOf(["physical", "online"]).required(),
-  venue: requiredText("Add the campus address or online platform."),
-  schedule: requiredText("Add the class days and times."),
-  startDate: yup.string().required("Pick a start date."),
-  durationWeeks: wholeNumber("duration", 1).max(104, "Up to 104 weeks."),
+  /** Pakistan time, as a datetime-local value: 2026-12-12T20:00 */
+  startsAt: yup
+    .string()
+    .required("Pick the class date and time.")
+    .matches(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Pick a full date and time."),
+  durationMinutes: wholeNumber("length in minutes", 15).max(720, "Up to 720 minutes."),
   seats: wholeNumber("number of seats", 1).max(1000, "Up to 1,000 seats."),
   price: wholeNumber("price", 0),
   level: yup
@@ -120,3 +121,5 @@ export const rejectSchema = yup.object({
 export const payoutSchema = yup.object({
   reference: requiredText("Add the transfer reference.").min(3, "Add the transfer reference."),
 });
+
+export const registrantEmailSchema = yup.object({ email: emailSchema });

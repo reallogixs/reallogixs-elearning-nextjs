@@ -5,13 +5,12 @@ import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 
 import { catalogueApi } from "@/lib/api";
-import { formatDate, formatPKR } from "@/lib/domain/format";
+import { formatDateTime, formatPKR } from "@/lib/domain/format";
 import { seatsTaken } from "@/lib/domain/orders";
 import { useAction } from "@/lib/useAction";
 import { useDb } from "@/lib/store/hooks";
 import { categoryById, instructorById } from "@/lib/store/selectors";
 import { PageHeader } from "@/components/portal/PageHeader";
-import { MODE_LABEL } from "@/components/courses/courseLabels";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -27,7 +26,7 @@ export function CoursesAdmin(): ReactElement {
     <>
       <PageHeader
         title="Courses"
-        description="Add courses, set batches and control enrolment."
+        description="Add masterclasses, set seats and control enrolment."
         actions={
           <Button href="/admin/courses/new" size="sm" arrow>
             New course
@@ -59,16 +58,17 @@ export function CoursesAdmin(): ReactElement {
             ),
           },
           {
-            key: "mode",
-            header: "Mode",
-            hideBelow: "xl",
-            cell: (course) => MODE_LABEL[course.mode],
-          },
-          {
             key: "start",
-            header: "Starts",
+            header: "Class",
             hideBelow: "xl",
-            cell: (course) => formatDate(course.startDate),
+            cell: (course) => (
+              <Link
+                href={`/admin/classes/${course.id}`}
+                className="inline-flex min-h-11 items-center hover:text-teal-700 hover:underline"
+              >
+                {formatDateTime(course.startsAt)}
+              </Link>
+            ),
           },
           {
             key: "seats",

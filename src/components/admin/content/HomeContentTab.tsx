@@ -52,8 +52,8 @@ export function HomeContentTab({ content }: { content: SiteContent }): ReactElem
           { key: "secondaryCta", label: "Second button" },
           {
             key: "upcomingLabel",
-            label: "Upcoming batches label",
-            hint: "Above the three next-batch links.",
+            label: "Upcoming classes label",
+            hint: "Above the three next-class links.",
           },
           { key: "subtitle", label: "Intro paragraph", kind: "multiline" },
         ]}

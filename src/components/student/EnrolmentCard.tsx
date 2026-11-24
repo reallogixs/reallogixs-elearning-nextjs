@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight, CalendarDays, MapPin, MonitorPlay } from "lucide-react";
 
 import type { Course, Order } from "@/types/domain";
-import { formatDate, formatPKR } from "@/lib/domain/format";
+import { formatDateTime, formatPKR } from "@/lib/domain/format";
 import { MODE_LABEL } from "@/components/courses/courseLabels";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 
@@ -12,7 +12,7 @@ import { EnrolmentSteps } from "./EnrolmentSteps";
 const NEXT_ACTION: Record<Order["status"], string> = {
   pending: "View order",
   rejected: "Re-upload receipt",
-  confirmed: "Join community",
+  confirmed: "Class & community",
   cancelled: "View order",
 };
 
@@ -41,7 +41,7 @@ export function EnrolmentCard({ order, course }: { order: Order; course?: Course
             </span>
             <span className="flex items-center gap-1.5">
               <CalendarDays aria-hidden="true" className="size-3.5" />
-              Starts {formatDate(course.startDate)}
+              {formatDateTime(course.startsAt)}
             </span>
           </p>
         ) : null}

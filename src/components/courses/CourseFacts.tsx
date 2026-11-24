@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { CalendarDays, Clock, Gauge, MapPin, MonitorPlay, Timer } from "lucide-react";
 
 import type { Course } from "@/types/domain";
-import { formatDate } from "@/lib/domain/format";
+import { formatClassTime, formatDate, formatDuration } from "@/lib/domain/format";
 
 import { LEVEL_LABEL, MODE_LABEL } from "./courseLabels";
 
@@ -14,9 +14,9 @@ export function CourseFacts({ course }: { course: Course }): ReactElement {
       term: MODE_LABEL[course.mode],
       detail: course.venue,
     },
-    { icon: CalendarDays, term: "Starts", detail: formatDate(course.startDate) },
-    { icon: Clock, term: "Schedule", detail: course.schedule },
-    { icon: Timer, term: "Duration", detail: `${course.durationWeeks} weeks` },
+    { icon: CalendarDays, term: "Date", detail: formatDate(course.startsAt) },
+    { icon: Clock, term: "Time", detail: formatClassTime(course.startsAt, course.durationMinutes) },
+    { icon: Timer, term: "Duration", detail: formatDuration(course.durationMinutes) },
     { icon: Gauge, term: "Level", detail: LEVEL_LABEL[course.level] },
   ];
   return (

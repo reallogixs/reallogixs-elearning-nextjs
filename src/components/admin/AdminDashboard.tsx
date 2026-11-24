@@ -111,7 +111,7 @@ export function AdminDashboard(): ReactElement {
         >
           <PendingPaymentsList orders={pending.slice(0, 5)} />
         </DashCard>
-        <DashCard title="Seats filled" description="Confirmed enrolments against seats, per batch">
+        <DashCard title="Seats filled" description="Confirmed enrolments against seats, per class">
           <BarList
             items={metrics.seats.map((row) => ({ ...row, display: `${row.value} / ${row.max}` }))}
           />

@@ -1,101 +1,115 @@
 "use client";
 
 import type { ReactElement } from "react";
+import { Send } from "lucide-react";
 
-import { settingsApi } from "@/lib/api";
+import { meetingsApi } from "@/lib/api";
 import { formatDate } from "@/lib/domain/format";
 import { useAction } from "@/lib/useAction";
 import { useDb } from "@/lib/store/hooks";
-import { courseById } from "@/lib/store/selectors";
 import { PageHeader } from "@/components/portal/PageHeader";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { IconButton } from "@/components/ui/IconButton";
 
-/** Issue certificates to confirmed enrolments once a student completes the course. */
+/** Certificates are only created by completing a class, so attendance can't be bypassed. */
 export function CertificatesAdmin(): ReactElement {
   const db = useDb();
   const { run, pending } = useAction();
-  const confirmed = db.orders.filter((order) => order.status === "confirmed");
 
   return (
     <>
       <PageHeader
         title="Certificates"
-        description="Issue a certificate when a student completes their course. Each has a public verification link."
+        description="Created and emailed automatically when you mark a class completed, to students who attended."
+        actions={
+          <Button href="/admin/classes" size="sm" variant="secondary" arrow>
+            Classes
+          </Button>
+        }
       />
       <DataTable
-        caption="Confirmed enrolments"
-        rows={confirmed}
-        rowKey={(order) => order.id}
-        empty={<EmptyState title="No confirmed enrolments yet" />}
+        caption="Issued certificates"
+        rows={db.certificates}
+        rowKey={(certificate) => certificate.id}
+        empty={
+          <EmptyState
+            title="No certificates yet"
+            body="Complete a class to issue its certificates."
+          />
+        }
         columns={[
           {
             key: "student",
             header: "Student",
-            cell: (order) => <span className="font-medium">{order.contact.name}</span>,
+            cell: (row) => <span className="font-semibold">{row.studentName}</span>,
+          },
+          { key: "course", header: "Class", wrap: true, cell: (row) => row.courseTitle },
+          {
+            key: "code",
+            header: "Code",
+            cell: (row) => <span className="font-mono">{row.code}</span>,
           },
           {
-            key: "course",
-            header: "Course",
-            cell: (order) => courseById(db, order.courseId)?.title ?? "—",
+            key: "issued",
+            header: "Issued",
+            hideBelow: "xl",
+            cell: (row) => formatDate(row.issuedAt),
+          },
+          {
+            key: "status",
+            header: "Status",
+            cell: (row) => (
+              <Badge tone={row.revokedAt ? "danger" : "success"}>
+                {row.revokedAt ? "Revoked" : "Valid"}
+              </Badge>
+            ),
           },
           {
             key: "actions",
-            header: "Certificate",
+            header: "Actions",
             className: "text-right",
-            cell: (order) => {
-              const certificate = db.certificates.find(
-                (candidate) => candidate.orderId === order.id,
-              );
-              if (!certificate) {
-                return (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    loading={pending === order.id}
-                    onClick={() =>
-                      run(
-                        order.id,
-                        () => settingsApi.issueCertificate(order.id),
-                        "Certificate issued.",
-                      )
-                    }
-                  >
-                    Issue
-                  </Button>
-                );
-              }
-              return (
-                <div className="flex flex-wrap items-center justify-end gap-1">
-                  <span className="mr-2 font-mono text-label text-ink-soft">
-                    {certificate.code} · {formatDate(certificate.issuedAt)}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    href={`/certificates/${certificate.code}`}
-                    target="_blank"
-                  >
-                    View
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    loading={pending === certificate.id}
-                    onClick={() =>
-                      run(
-                        certificate.id,
-                        () => settingsApi.revokeCertificate(certificate.id),
-                        "Certificate revoked.",
-                      )
-                    }
-                  >
-                    Revoke
-                  </Button>
-                </div>
-              );
-            },
+            cell: (row) => (
+              <div className="flex items-center justify-end">
+                <IconButton
+                  label={`Email ${row.studentName}'s certificate again`}
+                  disabled={Boolean(row.revokedAt) || pending === `send-${row.id}`}
+                  onClick={() =>
+                    run(
+                      `send-${row.id}`,
+                      () => meetingsApi.resendCertificate(row.id),
+                      "Certificate emailed again (see Outbox).",
+                    )
+                  }
+                >
+                  <Send className="size-4" />
+                </IconButton>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  href={`/certificates/${row.code}`}
+                  target="_blank"
+                >
+                  View
+                </Button>
+                <Button
+                  size="sm"
+                  variant={row.revokedAt ? "ghost" : "danger"}
+                  loading={pending === row.id}
+                  onClick={() =>
+                    run(
+                      row.id,
+                      () => meetingsApi.setCertificateRevoked(row.id, !row.revokedAt),
+                      row.revokedAt ? "Certificate restored." : "Certificate revoked.",
+                    )
+                  }
+                >
+                  {row.revokedAt ? "Restore" : "Revoke"}
+                </Button>
+              </div>
+            ),
           },
         ]}
       />

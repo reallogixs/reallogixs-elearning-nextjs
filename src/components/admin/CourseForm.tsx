@@ -6,7 +6,7 @@ import { Form, Formik } from "formik";
 
 import type { Course } from "@/types/domain";
 import { catalogueApi } from "@/lib/api";
-import { slugify } from "@/lib/domain/format";
+import { slugify, toPktInput } from "@/lib/domain/format";
 import { useAction } from "@/lib/useAction";
 import { useDb } from "@/lib/store/hooks";
 import { courseSchema, type CourseFormValues } from "@/lib/validation/admin";
@@ -26,10 +26,6 @@ const LEVELS = [
   { value: "intermediate", label: "Intermediate" },
   { value: "advanced", label: "Advanced" },
 ];
-const MODES = [
-  { value: "online", label: "Online (live)" },
-  { value: "physical", label: "Physical (on campus)" },
-];
 
 function toForm(course?: Course): CourseFormValues {
   return {
@@ -39,11 +35,8 @@ function toForm(course?: Course): CourseFormValues {
     description: course?.description ?? "",
     categoryId: course?.categoryId ?? "",
     instructorId: course?.instructorId ?? "",
-    mode: course?.mode ?? "online",
-    venue: course?.venue ?? "",
-    schedule: course?.schedule ?? "",
-    startDate: course?.startDate ?? "",
-    durationWeeks: course?.durationWeeks ?? 8,
+    startsAt: course ? toPktInput(course.startsAt) : "",
+    durationMinutes: course?.durationMinutes ?? 120,
     seats: course?.seats ?? 30,
     price: course?.price ?? 0,
     level: course?.level ?? "beginner",
@@ -67,7 +60,7 @@ export function CourseForm({ course }: { course?: Course }): ReactElement {
         const result = await run(
           "save",
           () => catalogueApi.saveCourse(values, course?.id),
-          course ? "Course updated." : "Course created.",
+          course ? "Course updated." : "Course and Zoom meeting created.",
         );
         if (result.ok) router.push("/admin/courses");
       }}
@@ -130,24 +123,24 @@ export function CourseForm({ course }: { course?: Course }): ReactElement {
           </Card>
 
           <Card className="grid gap-5 md:grid-cols-2">
-            <h2 className="text-h4 md:col-span-2">Batch &amp; schedule</h2>
-            <SelectField name="mode" label="Mode" options={MODES} />
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <h2 className="text-h4">Masterclass</h2>
+              <p className="text-small text-ink-soft">
+                Live on Zoom. The meeting is created when you save the course.
+              </p>
+            </div>
             <TextField
-              name="venue"
-              label={values.mode === "physical" ? "Campus address" : "Platform"}
-              hint={values.mode === "physical" ? "Where classes happen." : "e.g. Live on Zoom."}
+              name="startsAt"
+              label="Class date and time"
+              type="datetime-local"
+              hint="Pakistan time (PKT)."
             />
             <TextField
-              name="schedule"
-              label="Class schedule"
-              hint="e.g. Sat & Sun · 8:00–10:00 pm PKT"
-            />
-            <TextField name="startDate" label="Start date" type="date" />
-            <TextField
-              name="durationWeeks"
-              label="Duration (weeks)"
+              name="durationMinutes"
+              label="Length (minutes)"
               type="number"
-              min={1}
+              min={15}
+              step={15}
               inputMode="numeric"
             />
             <TextField
@@ -181,7 +174,7 @@ export function CourseForm({ course }: { course?: Course }): ReactElement {
             <SwitchField
               name="enrolmentOpen"
               label="Enrolment open"
-              description="Turn off to stop new enrolments before the batch is full."
+              description="Turn off to stop new enrolments before the class is full."
             />
             <SwitchField name="featured" label="Featured on home page" />
           </Card>

@@ -4,6 +4,7 @@
  */
 export * as authApi from "./auth";
 export * as catalogueApi from "./catalogue";
+export * as meetingsApi from "./meetings";
 export * as ordersApi from "./orders";
 export * as settingsApi from "./settings";
 export * as teachersApi from "./teachers";

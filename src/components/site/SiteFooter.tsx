@@ -14,6 +14,7 @@ const COLUMNS = [
     links: [
       { href: "/courses", label: "All courses" },
       { href: "/track", label: "Track enrolment" },
+      { href: "/verify", label: "Verify a certificate" },
       { href: "/#faq", label: "FAQ" },
     ],
   },

@@ -3,7 +3,7 @@
 import type { ReactElement } from "react";
 import { Award, BookOpen, Clock, Search } from "lucide-react";
 
-import { formatDate } from "@/lib/domain/format";
+import { formatClassTime, formatDate } from "@/lib/domain/format";
 import { useDb } from "@/lib/store/hooks";
 import { byNewest, courseById, ordersForStudent } from "@/lib/store/selectors";
 import { useStudent } from "@/lib/store/useRoleUser";
@@ -28,22 +28,22 @@ export function StudentDashboard(): ReactElement | null {
     (order) => order.status === "pending" || order.status === "rejected",
   ).length;
   const orderIds = new Set(orders.map((order) => order.id));
-  const certificates = db.certificates.filter((certificate) =>
-    orderIds.has(certificate.orderId),
+  const certificates = db.certificates.filter(
+    (certificate) => orderIds.has(certificate.orderId) && !certificate.revokedAt,
   ).length;
   const upcoming = confirmed
     .map((order) => courseById(db, order.courseId))
-    .filter((course) => course && new Date(course.startDate).getTime() > now)
-    .sort((a, b) => (a?.startDate ?? "").localeCompare(b?.startDate ?? ""))[0];
+    .filter((course) => course && new Date(course.startsAt).getTime() > now)
+    .sort((a, b) => (a?.startsAt ?? "").localeCompare(b?.startsAt ?? ""))[0];
   const daysToStart = upcoming
-    ? Math.ceil((new Date(upcoming.startDate).getTime() - now) / DAY)
+    ? Math.ceil((new Date(upcoming.startsAt).getTime() - now) / DAY)
     : null;
 
   return (
     <>
       <PageHeader
         title={`Hi ${student.name.split(" ")[0]}`}
-        description="Your enrolments, payments and community links."
+        description="Your classes, payments and certificates."
       />
 
       <section
@@ -53,15 +53,16 @@ export function StudentDashboard(): ReactElement | null {
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-grid-dark" />
         <div className="flex flex-col gap-2">
           <p className="text-small font-medium text-on-dark">
-            {upcoming ? "Your next batch" : "Ready for your next skill?"}
+            {upcoming ? "Your next class" : "Ready for your next skill?"}
           </p>
           <p className="text-dash-title text-white">
             {upcoming ? upcoming.title : "Find a course that fits your goals"}
           </p>
           {upcoming && daysToStart !== null ? (
             <p className="text-small text-on-dark">
-              Starts {formatDate(upcoming.startDate)} ·{" "}
-              {daysToStart === 1 ? "tomorrow" : `in ${daysToStart} days`} · {upcoming.schedule}
+              Starts {formatDate(upcoming.startsAt)} ·{" "}
+              {daysToStart === 1 ? "tomorrow" : `in ${daysToStart} days`} ·{" "}
+              {formatClassTime(upcoming.startsAt, upcoming.durationMinutes)}
             </p>
           ) : null}
         </div>

@@ -1,7 +1,9 @@
 import type { Category, Course, Instructor } from "@/types/domain";
 import type { Result } from "@/types/forms";
 import { descendantIds } from "@/lib/domain/categories";
+import { fromPktInput } from "@/lib/domain/format";
 import { newId } from "@/lib/domain/ids";
+import { emptyMeeting } from "@/lib/domain/meeting";
 import {
   courseSchema,
   type CategoryFormValues,
@@ -9,6 +11,7 @@ import {
   type InstructorFormValues,
 } from "@/lib/validation/admin";
 import { validateWith } from "@/lib/validation/validate";
+import * as zoom from "@/lib/zoom/client";
 
 import { fail, latency, nowIso, ok, read, replaceById, write } from "./client";
 
@@ -34,14 +37,30 @@ export async function saveCourse(input: CourseFormValues, id?: string): Promise<
     .map((line) => line.trim())
     .filter(Boolean);
   const existing = id ? db.courses.find((course) => course.id === id) : undefined;
+  const startsAt = fromPktInput(values.startsAt);
+  const meeting = existing && db.meetings.find((item) => item.courseId === existing.id);
+  const held = Boolean(meeting && meeting.status !== "scheduled");
+  if (held && existing && existing.startsAt !== startsAt)
+    return fail("This class has already been held, so its date can't change.");
   const course: Course = {
     ...values,
+    // Masterclasses are online only for now; physical courses keep the fields for later.
+    mode: existing?.mode ?? "online",
+    venue: existing?.venue ?? "Live on Zoom",
+    startsAt,
+    enrolmentOpen: held ? false : values.enrolmentOpen,
     outcomes,
     id: existing?.id ?? newId("crs"),
     createdAt: existing?.createdAt ?? nowIso(),
   };
+  // Every course has its own Zoom meeting, created with it and kept in step with it.
+  const created = meeting ? null : await zoom.createMeeting();
+  if (meeting) await zoom.updateMeeting(meeting.zoomId, course);
   write((current) => ({
     ...current,
+    meetings: created
+      ? [...current.meetings, emptyMeeting(course.id, created.zoomId)]
+      : current.meetings,
     courses: existing
       ? replaceById(current.courses, course.id, () => course)
       : [course, ...current.courses],
@@ -56,12 +75,21 @@ export async function deleteCourse(id: string): Promise<Result> {
       "This course has enrolments, so it can't be deleted. Set it to Draft to hide it instead.",
     );
   }
-  write((db) => ({ ...db, courses: db.courses.filter((course) => course.id !== id) }));
+  const meeting = read().meetings.find((item) => item.courseId === id);
+  if (meeting) await zoom.deleteMeeting(meeting.zoomId);
+  write((db) => ({
+    ...db,
+    courses: db.courses.filter((course) => course.id !== id),
+    meetings: db.meetings.filter((item) => item.courseId !== id),
+  }));
   return ok(undefined);
 }
 
 export async function setEnrolmentOpen(id: string, open: boolean): Promise<Result> {
   await latency(150);
+  const meeting = read().meetings.find((item) => item.courseId === id);
+  if (open && meeting && meeting.status !== "scheduled")
+    return fail("This class has already been held.");
   write((db) => ({
     ...db,
     courses: replaceById(db.courses, id, (course) => ({ ...course, enrolmentOpen: open })),

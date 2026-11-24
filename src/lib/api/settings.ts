@@ -1,10 +1,10 @@
-import type { Certificate, PaymentMethod, SiteContent } from "@/types/domain";
+import type { PaymentMethod, SiteContent } from "@/types/domain";
 import type { Result } from "@/types/forms";
-import { newCertificateCode, newId } from "@/lib/domain/ids";
+import { newId } from "@/lib/domain/ids";
 import { paymentMethodSchema, type PaymentMethodFormValues } from "@/lib/validation/admin";
 import { validateWith } from "@/lib/validation/validate";
 
-import { fail, latency, nowIso, ok, read, replaceById, write } from "./client";
+import { fail, latency, ok, read, replaceById, write } from "./client";
 
 /* Payment methods -------------------------------------------------------- */
 
@@ -94,39 +94,6 @@ export async function saveContentEntry<
   write((db) => ({
     ...db,
     content: { ...db.content, [group]: { ...db.content[group], [key]: value } },
-  }));
-  return ok(undefined);
-}
-
-/* Certificates ----------------------------------------------------------- */
-
-export async function issueCertificate(orderId: string): Promise<Result<Certificate>> {
-  await latency();
-  const db = read();
-  const order = db.orders.find((candidate) => candidate.id === orderId);
-  const course = db.courses.find((candidate) => candidate.id === order?.courseId);
-  if (!order || !course) return fail("Order not found.");
-  if (order.status !== "confirmed")
-    return fail("Only confirmed enrolments can receive a certificate.");
-  if (db.certificates.some((certificate) => certificate.orderId === orderId))
-    return fail("A certificate already exists.");
-  const certificate: Certificate = {
-    id: newId("crt"),
-    code: newCertificateCode(),
-    orderId,
-    studentName: order.contact.name,
-    courseTitle: course.title,
-    issuedAt: nowIso(),
-  };
-  write((current) => ({ ...current, certificates: [certificate, ...current.certificates] }));
-  return ok(certificate);
-}
-
-export async function revokeCertificate(id: string): Promise<Result> {
-  await latency();
-  write((db) => ({
-    ...db,
-    certificates: db.certificates.filter((certificate) => certificate.id !== id),
   }));
   return ok(undefined);
 }

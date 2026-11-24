@@ -5,6 +5,7 @@ import type {
   Course,
   Database,
   Instructor,
+  Meeting,
   Order,
   PaymentMethod,
   Receipt,
@@ -13,12 +14,13 @@ import type {
 
 import { siteContent } from "./content";
 import { generateHistory } from "./history";
+import { demoMeeting } from "./meetings";
 import { mockReceiptUrl } from "./receipts";
 
 export { mockReceiptUrl };
 
-/** Bump when the seed shape changes; browsers holding older demo data reset to the new seed. */
-export const DB_VERSION = 2;
+/** Bump when the data shape changes, and add an upgrade step in `lib/store/upgrade.ts`. */
+export const DB_VERSION = 3;
 
 const categories: Category[] = [
   {
@@ -118,19 +120,38 @@ function course(
 
 const courses: Course[] = [
   course({
+    id: "crs_prompt",
+    slug: "prompt-engineering-masterclass",
+    title: "Prompt Engineering Masterclass",
+    summary: "Write prompts that give reliable results at work.",
+    description:
+      "A live masterclass on structuring, testing and improving prompts for everyday business tasks.",
+    categoryId: "cat_genai",
+    instructorId: "ins_ayesha",
+    mode: "online",
+    venue: "Live on Zoom",
+    startsAt: "2026-11-14T20:00:00+05:00",
+    durationMinutes: 120,
+    seats: 40,
+    price: 5000,
+    level: "beginner",
+    featured: false,
+    enrolmentOpen: false,
+    outcomes: ["Structure clear prompts", "Test and improve results"],
+  }),
+  course({
     id: "crs_nextjs",
     slug: "full-stack-nextjs",
     title: "Full-stack Web Development with Next.js",
     summary: "Go from HTML basics to deploying a real, database-backed Next.js app.",
     description:
-      "A hands-on bootcamp covering modern React, the Next.js App Router, TypeScript, Tailwind CSS, databases and deployment. Every week ends with something you can show an employer.",
+      "A live masterclass covering modern React, the Next.js App Router, TypeScript, Tailwind CSS, databases and deployment. You finish with something you can show an employer.",
     categoryId: "cat_frontend",
     instructorId: "ins_hamza",
-    mode: "physical",
-    venue: "Reallogixs Campus, Johar Town, Lahore",
-    schedule: "Mon, Wed & Fri · 6:30–8:30 pm PKT",
-    startDate: "2027-01-11",
-    durationWeeks: 12,
+    mode: "online",
+    venue: "Live on Zoom",
+    startsAt: "2027-01-09T18:30:00+05:00",
+    durationMinutes: 150,
     seats: 25,
     price: 45000,
     level: "beginner",
@@ -153,9 +174,8 @@ const courses: Course[] = [
     instructorId: "ins_ayesha",
     mode: "online",
     venue: "Live on Zoom",
-    schedule: "Sat & Sun · 8:00–10:00 pm PKT",
-    startDate: "2026-12-12",
-    durationWeeks: 8,
+    startsAt: "2026-12-12T20:00:00+05:00",
+    durationMinutes: 120,
     seats: 40,
     price: 38000,
     level: "intermediate",
@@ -177,10 +197,9 @@ const courses: Course[] = [
     categoryId: "cat_uiux",
     instructorId: "ins_bilal",
     mode: "online",
-    venue: "Live on Google Meet",
-    schedule: "Tue & Thu · 7:00–9:00 pm PKT",
-    startDate: "2026-12-08",
-    durationWeeks: 6,
+    venue: "Live on Zoom",
+    startsAt: "2026-12-08T19:00:00+05:00",
+    durationMinutes: 120,
     seats: 30,
     price: 22000,
     level: "beginner",
@@ -203,9 +222,8 @@ const courses: Course[] = [
     instructorId: "ins_hamza",
     mode: "online",
     venue: "Live on Zoom",
-    schedule: "Sat · 3:00–6:00 pm PKT",
-    startDate: "2027-01-16",
-    durationWeeks: 8,
+    startsAt: "2027-01-16T15:00:00+05:00",
+    durationMinutes: 180,
     seats: 30,
     price: 32000,
     level: "intermediate",
@@ -226,11 +244,10 @@ const courses: Course[] = [
       "Learn Dart and Flutter, build beautiful layouts, connect to APIs and publish to the Play Store.",
     categoryId: "cat_mobile",
     instructorId: "ins_hamza",
-    mode: "physical",
-    venue: "Reallogixs Campus, Johar Town, Lahore",
-    schedule: "Sat & Sun · 11:00 am–1:00 pm PKT",
-    startDate: "2027-02-06",
-    durationWeeks: 10,
+    mode: "online",
+    venue: "Live on Zoom",
+    startsAt: "2027-02-06T11:00:00+05:00",
+    durationMinutes: 120,
     seats: 20,
     price: 40000,
     level: "beginner",
@@ -248,14 +265,13 @@ const courses: Course[] = [
     title: "Machine Learning with Python",
     summary: "Clean data, train models and explain the results.",
     description:
-      "A practical introduction to pandas, scikit-learn and model evaluation, with weekly projects on real Pakistani datasets.",
+      "A practical introduction to pandas, scikit-learn and model evaluation, with a project on a real Pakistani dataset.",
     categoryId: "cat_ml",
     instructorId: "ins_ayesha",
     mode: "online",
     venue: "Live on Zoom",
-    schedule: "Mon & Wed · 9:00–10:30 pm PKT",
-    startDate: "2027-01-05",
-    durationWeeks: 10,
+    startsAt: "2027-01-05T21:00:00+05:00",
+    durationMinutes: 90,
     seats: 35,
     price: 35000,
     level: "intermediate",
@@ -277,10 +293,9 @@ const courses: Course[] = [
     categoryId: "cat_seo",
     instructorId: "ins_mahnoor",
     mode: "online",
-    venue: "Live on Google Meet",
-    schedule: "Fri · 8:00–10:00 pm PKT",
-    startDate: "2026-12-04",
-    durationWeeks: 4,
+    venue: "Live on Zoom",
+    startsAt: "2026-12-04T20:00:00+05:00",
+    durationMinutes: 120,
     seats: 2,
     price: 15000,
     level: "beginner",
@@ -300,11 +315,10 @@ const courses: Course[] = [
     description: "Content calendars, short-form video, Meta ads and measuring return on ad spend.",
     categoryId: "cat_social",
     instructorId: "ins_mahnoor",
-    mode: "physical",
-    venue: "Reallogixs Campus, Johar Town, Lahore",
-    schedule: "Sun · 4:00–7:00 pm PKT",
-    startDate: "2027-01-10",
-    durationWeeks: 6,
+    mode: "online",
+    venue: "Live on Zoom",
+    startsAt: "2027-01-10T16:00:00+05:00",
+    durationMinutes: 180,
     seats: 20,
     price: 18000,
     level: "beginner",
@@ -479,6 +493,44 @@ function receipt(id: string, method: string, amount: number, ref: string, at: st
 
 const orders: Order[] = [
   {
+    id: "RLX-PR0MA",
+    courseId: "crs_prompt",
+    studentId: "usr_s_ali",
+    contact: { name: "Ali Raza", email: "ali@example.com", phone: "0302 1234567" },
+    promoCode: null,
+    price: { base: 5000, discountPct: 0, discount: 0, total: 5000 },
+    commission: null,
+    paymentMethodId: "pm_jazzcash",
+    receipts: [receipt("rcp_p1", "JazzCash", 5000, "JCPR0MA", "2026-11-10T10:00:00.000Z")],
+    status: "confirmed",
+    rejectionReason: null,
+    history: [
+      { at: "2026-11-10T10:00:00.000Z", status: "pending" },
+      { at: "2026-11-10T12:00:00.000Z", status: "confirmed" },
+    ],
+    createdAt: "2026-11-10T10:00:00.000Z",
+    updatedAt: "2026-11-10T12:00:00.000Z",
+  },
+  {
+    id: "RLX-PR0MZ",
+    courseId: "crs_prompt",
+    studentId: "usr_s_zara",
+    contact: { name: "Zara Hussain", email: "zara@example.com", phone: "0315 9876543" },
+    promoCode: null,
+    price: { base: 5000, discountPct: 0, discount: 0, total: 5000 },
+    commission: null,
+    paymentMethodId: "pm_jazzcash",
+    receipts: [receipt("rcp_p2", "JazzCash", 5000, "JCPR0MZ", "2026-11-10T10:00:00.000Z")],
+    status: "confirmed",
+    rejectionReason: null,
+    history: [
+      { at: "2026-11-10T10:00:00.000Z", status: "pending" },
+      { at: "2026-11-10T12:00:00.000Z", status: "confirmed" },
+    ],
+    createdAt: "2026-11-10T10:00:00.000Z",
+    updatedAt: "2026-11-10T12:00:00.000Z",
+  },
+  {
     id: "RLX-7HQ2M",
     courseId: "crs_genai",
     studentId: "usr_s_ali",
@@ -570,7 +622,30 @@ const orders: Order[] = [
   },
 ];
 
+/** The past class was held: Ali joined, Zara didn't, so only Ali has a certificate. */
+function seedMeetings(allOrders: Order[]): Meeting[] {
+  return courses.map((item) => {
+    const meeting = demoMeeting(item, allOrders);
+    if (item.id !== "crs_prompt") return meeting;
+    return {
+      ...meeting,
+      status: "ended",
+      startedAt: "2026-11-14T15:02:00.000Z",
+      endedAt: "2026-11-14T17:00:00.000Z",
+      completedAt: "2026-11-14T17:10:00.000Z",
+      attendance: [
+        {
+          orderId: "RLX-PR0MA",
+          joinedAt: "2026-11-14T15:05:00.000Z",
+          leftAt: "2026-11-14T17:00:00.000Z",
+        },
+      ],
+    };
+  });
+}
+
 export function createSeed(): Database {
+  const allOrders = [...orders, ...generateHistory(new Date("2026-11-20T09:00:00.000Z"))];
   return {
     version: DB_VERSION,
     categories,
@@ -578,7 +653,8 @@ export function createSeed(): Database {
     courses,
     paymentMethods,
     users,
-    orders: [...orders, ...generateHistory(new Date("2026-11-20T09:00:00.000Z"))],
+    orders: allOrders,
+    meetings: seedMeetings(allOrders),
     payouts: [
       {
         id: "pay_001",
@@ -589,7 +665,18 @@ export function createSeed(): Database {
         paidAt: "2026-11-01T09:00:00.000Z",
       },
     ],
-    certificates: [],
+    certificates: [
+      {
+        id: "crt_demo",
+        code: "CERT-DEMO2026",
+        orderId: "RLX-PR0MA",
+        courseId: "crs_prompt",
+        studentName: "Ali Raza",
+        courseTitle: "Prompt Engineering Masterclass",
+        issuedAt: "2026-11-14T17:10:00.000Z",
+        revokedAt: null,
+      },
+    ],
     outbox: [],
     content: siteContent,
   };

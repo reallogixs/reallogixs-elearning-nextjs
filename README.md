@@ -77,6 +77,22 @@ src/
   closes it, or once the start date has passed.
 - **Cancelling** a confirmed order frees the seat and removes the commission (blocked if already paid out).
 
+## Zoom classes and certificates (simulated)
+
+1. Adding a course creates its Zoom meeting.
+2. Confirming a payment registers the student's email on it and emails a personal `/join/…` link.
+   If registration fails, the payment isn't confirmed. Cancelling an order revokes the link.
+3. Entry needs: a personal link, a confirmed order, a Zoom sign-in with the registered email, and the
+   host having started the class. Wrong accounts are refused and listed on the class page.
+4. Attendance counts any time in the meeting after the host started it. There is no minimum stay.
+5. **Mark completed** (Admin → Classes) creates and emails certificates to paid students who attended,
+   and shows them in the student portal. Absent students get none.
+6. Anyone can check a code at `/verify`. Revoked certificates are reported as no longer valid.
+
+**To connect real Zoom:** a paid plan, a Server-to-Server OAuth app and its webhooks, implemented on
+the server in `lib/zoom/client.ts` (the API calls are listed there). PDF files for the certificate
+emails also come with the mail server; the mock attaches a link to the printable certificate.
+
 ## Moving to a real backend
 
 | Mock                                    | Replace with                                            |
@@ -85,6 +101,7 @@ src/
 | `lib/api/*` functions                    | Server actions / Supabase queries (same signatures)     |
 | `authApi` + plain-text demo passwords    | Supabase Auth; `RequireRole` → `proxy.ts` + RLS policies |
 | `lib/files.ts` data URLs (receipts, logos) | Cloudinary signed uploads (store the URL)             |
+| `lib/zoom/client.ts`                     | Zoom REST API + webhooks, server side only              |
 | `lib/api/mailer.ts` outbox               | Nodemailer (Hostinger SMTP) + React Email templates     |
 | `DemoSwitcher` in the root layout        | Remove                                                  |
 

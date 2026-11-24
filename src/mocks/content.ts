@@ -8,7 +8,7 @@ export const siteContent: SiteContent = {
     title: "Learn the skills that build",
     highlight: "real products.",
     subtitle:
-      "Live, mentor-led courses in software, AI, design and marketing, taught by the engineers who ship client work at Reallogixs. Join on campus in Lahore or online from anywhere.",
+      "Live, mentor-led courses in software, AI, design and marketing, taught by the engineers who ship client work at Reallogixs. Join live on Zoom from anywhere.",
     primaryCta: "Browse courses",
     secondaryCta: "Track my enrolment",
     upcomingLabel: "Enrolling now",
@@ -16,9 +16,9 @@ export const siteContent: SiteContent = {
   sections: {
     featured: {
       label: "Featured courses",
-      title: "Next batches starting soon",
+      title: "Masterclasses starting soon",
       highlight: "",
-      description: "Small, live batches with a mentor who ships real client work.",
+      description: "Small, live masterclasses with a mentor who ships real client work.",
     },
     categories: {
       label: "Explore by category",
@@ -35,7 +35,7 @@ export const siteContent: SiteContent = {
     },
     stats: {
       label: "By the numbers",
-      title: "Small batches.",
+      title: "Small classes.",
       highlight: "Real outcomes.",
       description: "",
     },
@@ -43,7 +43,7 @@ export const siteContent: SiteContent = {
       label: "Student stories",
       title: "Don't take our word.",
       highlight: "Take theirs.",
-      description: "Students who joined a batch, built something real and kept going.",
+      description: "Students who joined a class, built something real and kept going.",
     },
     faq: {
       label: "FAQ",
@@ -56,12 +56,17 @@ export const siteContent: SiteContent = {
     courses: {
       label: "Courses",
       title: "Find your next skill",
-      body: "Live, mentor-led batches with real projects. Pick a category, choose online or on campus, and enrol in minutes.",
+      body: "Live, mentor-led masterclasses on Zoom. Pick a category and enrol in minutes.",
     },
     track: {
       label: "Track enrolment",
       title: "Where's my enrolment?",
       body: "Enter the order number from checkout and the phone number you used. Demo: try RLX-9GUEST with 0344 1112233.",
+    },
+    verify: {
+      label: "Verify certificate",
+      title: "Is this certificate genuine?",
+      body: "Enter the code printed on a Reallogixs certificate to see who it was issued to. Demo: try CERT-DEMO2026.",
     },
     login: {
       label: "Welcome back",
@@ -96,7 +101,7 @@ export const siteContent: SiteContent = {
   steps: [
     {
       title: "Pick a course",
-      body: "Browse by category, check the schedule and choose online or on campus.",
+      body: "Browse by category and check the date and time.",
     },
     {
       title: "Pay your way",
@@ -108,7 +113,7 @@ export const siteContent: SiteContent = {
     },
     {
       title: "Join the community",
-      body: "Once we confirm your payment you get the Reallogixs WhatsApp community link and class details.",
+      body: "Once we confirm your payment you get your personal Zoom link and the Reallogixs WhatsApp community.",
     },
   ],
   testimonials: [
@@ -117,7 +122,7 @@ export const siteContent: SiteContent = {
       name: "Ali R.",
       role: "AI Agents student",
       quote:
-        "I built and deployed a support chatbot for my uncle's shop in week six. The live sessions made the hard parts click.",
+        "I built and deployed a support chatbot for my uncle's shop after one class. The live session made the hard parts click.",
       isPlaceholder: true,
     },
     {
@@ -132,7 +137,7 @@ export const siteContent: SiteContent = {
       id: "tst_3",
       name: "Hira S.",
       role: "UI/UX student",
-      quote: "The portfolio case study we built got me my first freelance client.",
+      quote: "The case study we built got me my first freelance client.",
       isPlaceholder: true,
     },
   ],
@@ -165,7 +170,7 @@ export const siteContent: SiteContent = {
       id: "faq_5",
       question: "Do I get a certificate?",
       answer:
-        "Yes. Students who complete a course receive a Reallogixs certificate with a verification code.",
+        "Yes. Join the live class while it is running and your e-certificate is emailed to you when the class is completed. It also appears in your portal, and anyone can check it on the Verify page.",
     },
   ],
   community: {

@@ -23,7 +23,7 @@ export function SiteHeader(): ReactElement {
 
   return (
     <header data-scrolled={scrolled} className="site-header sticky top-0 z-40">
-      <div className="shell flex h-header items-center justify-between gap-6">
+      <div className="shell flex h-header items-center justify-between gap-3 xl:gap-6">
         <BrandMark tone="header" />
         <nav aria-label="Main" className="hidden lg:block">
           <ul className="flex items-center gap-1">
@@ -31,7 +31,7 @@ export function SiteHeader(): ReactElement {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="inline-flex min-h-11 items-center rounded-pill px-4 text-small font-medium whitespace-nowrap text-[var(--header-fg-soft)] transition-colors hover:bg-[var(--header-hover)] hover:text-[var(--header-fg)]"
+                  className="inline-flex min-h-11 items-center rounded-pill px-2.5 text-small font-medium whitespace-nowrap text-[var(--header-fg-soft)] transition-colors hover:bg-[var(--header-hover)] hover:text-[var(--header-fg)] xl:px-4"
                 >
                   {item.label}
                 </Link>

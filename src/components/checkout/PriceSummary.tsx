@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
 import type { Course, PriceBreakdown } from "@/types/domain";
-import { formatDate, formatPKR } from "@/lib/domain/format";
+import { formatDateTime, formatPKR } from "@/lib/domain/format";
 import { MODE_LABEL } from "@/components/courses/courseLabels";
 
 interface PriceSummaryProps {
@@ -17,7 +17,7 @@ export function PriceSummary({ course, price, promoCode }: PriceSummaryProps): R
       <div>
         <p className="font-display text-h4 text-white">{course.title}</p>
         <p className="mt-1 text-small text-on-dark-soft">
-          {MODE_LABEL[course.mode]} · Starts {formatDate(course.startDate)}
+          {MODE_LABEL[course.mode]} · {formatDateTime(course.startsAt)}
         </p>
       </div>
       <dl className="flex flex-col gap-2 border-t border-line-dark pt-4 text-small">

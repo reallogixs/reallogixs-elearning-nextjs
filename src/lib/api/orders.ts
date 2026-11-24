@@ -1,6 +1,6 @@
 import type { Order, Receipt, TeacherUser } from "@/types/domain";
 import type { Result } from "@/types/forms";
-import { formatPKR, normalisePhone } from "@/lib/domain/format";
+import { formatClassTime, formatDate, formatPKR, normalisePhone } from "@/lib/domain/format";
 import { newId, newOrderNumber } from "@/lib/domain/ids";
 import { enrolmentState, seatsLeft } from "@/lib/domain/orders";
 import { commissionFor, findTeacherByCode, priceFor } from "@/lib/domain/pricing";
@@ -9,6 +9,7 @@ import { validateWith } from "@/lib/validation/validate";
 
 import { fail, latency, nowIso, ok, read, replaceById, write } from "./client";
 import { sendEmail } from "./mailer";
+import { registerStudent, unregisterStudent } from "./meetings";
 
 export interface ReceiptUpload {
   fileName: string;
@@ -67,6 +68,17 @@ export async function createOrder(input: CreateOrderInput): Promise<Result<Order
   if (!course) return fail("This course is no longer available.");
   if (enrolmentState(course, db.orders) !== "open")
     return fail("Enrolment for this batch has closed.");
+  const email = contact.data.email.toLowerCase();
+  // Zoom allows one registrant per email, and students shouldn't pay twice for a class.
+  if (
+    db.orders.some(
+      (order) =>
+        order.courseId === course.id &&
+        order.status !== "cancelled" &&
+        order.contact.email.toLowerCase() === email,
+    )
+  )
+    return fail("This email already has an order for this class. Check it on Track enrolment.");
   if (!db.paymentMethods.some((method) => method.id === input.paymentMethodId && method.enabled)) {
     return fail("Choose a payment method.");
   }
@@ -81,7 +93,7 @@ export async function createOrder(input: CreateOrderInput): Promise<Result<Order
     id: newOrderNumber(),
     courseId: course.id,
     studentId: input.studentId,
-    contact: { ...contact.data, email: contact.data.email.toLowerCase() },
+    contact: { ...contact.data, email },
     promoCode: teacher?.promoCode ?? null,
     price,
     commission: teacher
@@ -153,6 +165,10 @@ export async function confirmOrder(orderId: string): Promise<Result<Order>> {
   if (seatsLeft(course, db.orders) === 0)
     return fail("This batch is full. Increase the seats or contact the student.");
 
+  // Register on Zoom first: an order is only confirmed if the student can actually get in.
+  const registered = await registerStudent(order, course);
+  if (!registered.ok) return registered;
+
   const at = nowIso();
   const updated: Order = {
     ...order,
@@ -165,7 +181,7 @@ export async function confirmOrder(orderId: string): Promise<Result<Order>> {
     "order_confirmed",
     order.contact.email,
     `You're enrolled in ${course.title}`,
-    `Hi ${order.contact.name},\n\nYour payment is confirmed. Join the Reallogixs WhatsApp community: ${db.content.community.whatsappUrl}\n\nClasses: ${course.schedule}, starting ${course.startDate} (${course.venue}).\n\n— Reallogixs Academy`,
+    `Hi ${order.contact.name},\n\nYour payment is confirmed. Join the Reallogixs WhatsApp community: ${db.content.community.whatsappUrl}\n\nClass: ${formatDate(course.startsAt)}, ${formatClassTime(course.startsAt, course.durationMinutes)}. Your personal Zoom link is in a separate email.\n\n— Reallogixs Academy`,
   );
   return ok(updated);
 }
@@ -198,6 +214,9 @@ export async function cancelOrder(orderId: string): Promise<Result> {
   const order = read().orders.find((candidate) => candidate.id === orderId);
   if (!order) return fail("Order not found.");
   if (order.commission?.payoutId) return fail("This order's commission has already been paid out.");
+  if (read().certificates.some((item) => item.orderId === orderId && !item.revokedAt))
+    return fail("This student has a certificate. Revoke it before cancelling the order.");
+  await unregisterStudent(order);
   const at = nowIso();
   write((db) => ({
     ...db,

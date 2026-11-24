@@ -42,12 +42,11 @@ export interface Course {
   categoryId: ID;
   instructorId: ID;
   mode: CourseMode;
-  /** Campus address for physical courses, or the platform (e.g. Zoom) for online ones. */
+  /** Platform for online courses (Zoom), or a campus address if physical ones return. */
   venue: string;
-  /** Human-readable timetable, e.g. "Sat & Sun · 7:00–9:00 pm PKT". */
-  schedule: string;
-  startDate: ISODate;
-  durationWeeks: number;
+  /** When the live masterclass starts (one class per course). */
+  startsAt: ISODate;
+  durationMinutes: number;
   seats: number;
   price: PKR;
   level: CourseLevel;
@@ -183,9 +182,51 @@ export interface Certificate {
   /** Short verification code printed on the certificate. */
   code: string;
   orderId: ID;
+  courseId: ID;
   studentName: string;
   courseTitle: string;
   issuedAt: ISODate;
+  /** Set when the admin revokes it; verification then reports it as no longer valid. */
+  revokedAt: ISODate | null;
+}
+
+export type MeetingStatus = "scheduled" | "live" | "ended";
+
+/** A paid, confirmed student registered on the Zoom meeting. */
+export interface Registrant {
+  orderId: ID;
+  name: string;
+  /** The student must be signed in to Zoom with this email. */
+  email: string;
+  /** Secret in the personal join link. */
+  joinToken: string;
+  registeredAt: ISODate;
+}
+
+/** One stay in the meeting. `leftAt` is null while the student is still in it. */
+export interface AttendanceSession {
+  orderId: ID;
+  joinedAt: ISODate;
+  leftAt: ISODate | null;
+}
+
+export interface DeniedEntry {
+  at: ISODate;
+  email: string;
+  reason: string;
+}
+
+/** The Zoom meeting behind a course. Created with the course, one each. */
+export interface Meeting {
+  courseId: ID;
+  zoomId: string;
+  status: MeetingStatus;
+  startedAt: ISODate | null;
+  endedAt: ISODate | null;
+  completedAt: ISODate | null;
+  registrants: Registrant[];
+  attendance: AttendanceSession[];
+  denied: DeniedEntry[];
 }
 
 export type EmailKind =
@@ -195,7 +236,9 @@ export type EmailKind =
   | "order_confirmed"
   | "order_rejected"
   | "password_changed"
-  | "payout_sent";
+  | "payout_sent"
+  | "zoom_invite"
+  | "certificate_issued";
 
 /** Mock outbox: what would be emailed once SMTP is connected. */
 export interface OutboxEmail {
@@ -204,6 +247,8 @@ export interface OutboxEmail {
   to: string;
   subject: string;
   body: string;
+  /** Files that go with the email; the mock links to the page the PDF is made from. */
+  attachments?: { name: string; href: string }[];
   createdAt: ISODate;
 }
 
@@ -275,6 +320,7 @@ export interface SiteContent {
   pages: {
     courses: PageCopy;
     track: PageCopy;
+    verify: PageCopy;
     login: AuthPageCopy;
     signup: AuthPageCopy;
   };
@@ -323,6 +369,7 @@ export interface Database {
   orders: Order[];
   payouts: Payout[];
   certificates: Certificate[];
+  meetings: Meeting[];
   outbox: OutboxEmail[];
   content: SiteContent;
 }

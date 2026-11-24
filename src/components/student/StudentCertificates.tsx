@@ -17,19 +17,21 @@ export function StudentCertificates(): ReactElement | null {
   const student = useStudent();
   if (!student) return null;
   const orderIds = new Set(ordersForStudent(db, student).map((order) => order.id));
-  const certificates = db.certificates.filter((certificate) => orderIds.has(certificate.orderId));
+  const certificates = db.certificates.filter(
+    (certificate) => orderIds.has(certificate.orderId) && !certificate.revokedAt,
+  );
 
   return (
     <>
       <PageHeader
         title="Certificates"
-        description="Issued by Reallogixs when you complete a course."
+        description="Emailed to you and added here when a class you attended is completed."
       />
       {certificates.length === 0 ? (
         <EmptyState
           icon={<Award className="size-5" />}
           title="No certificates yet"
-          body="Finish a course and your certificate will appear here."
+          body="Join a live class and your certificate will appear here once it is completed."
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">

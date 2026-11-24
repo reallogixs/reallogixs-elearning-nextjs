@@ -12,6 +12,7 @@ import {
   ShoppingBag,
   UserRoundCog,
   Users,
+  Video,
   Wallet,
   WalletCards,
 } from "lucide-react";
@@ -50,6 +51,7 @@ export const PORTAL_NAV: Record<Role, PortalNavGroup[]> = {
       title: "Catalogue",
       items: [
         { href: "/admin/courses", label: "Courses", icon: BookOpen },
+        { href: "/admin/classes", label: "Classes", icon: Video },
         { href: "/admin/categories", label: "Categories", icon: FolderTree },
         { href: "/admin/instructors", label: "Instructors", icon: GraduationCap },
       ],

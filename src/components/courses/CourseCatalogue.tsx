@@ -83,6 +83,7 @@ export function CourseCatalogue(): ReactElement {
       onSelect={selectCategory}
     />
   );
+  const hasModes = new Set(courses.map((course) => course.mode)).size > 1;
   const modeChips = (
     <ChipGroup label="Course mode" options={MODE_OPTIONS} value={mode} onChange={setMode} />
   );
@@ -95,7 +96,7 @@ export function CourseCatalogue(): ReactElement {
 
       <div className="flex min-w-0 flex-col gap-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="hidden lg:block">{modeChips}</div>
+          <div className="hidden lg:block">{hasModes ? modeChips : null}</div>
           <div className="flex gap-2 lg:w-72">
             <FilterButton
               count={activeCount}
@@ -176,10 +177,12 @@ export function CourseCatalogue(): ReactElement {
         }
       >
         <div className="flex flex-col gap-6 p-5">
-          <div className="flex flex-col gap-3">
-            <p className="text-small font-semibold">Mode</p>
-            {modeChips}
-          </div>
+          {hasModes ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-small font-semibold">Mode</p>
+              {modeChips}
+            </div>
+          ) : null}
           <div className="flex flex-col gap-3">
             <p className="text-small font-semibold">Category</p>
             {categoryNav}

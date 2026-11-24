@@ -7,6 +7,7 @@ export const SITE_NAV: NavItem[] = [
   { href: "/courses", label: "Courses" },
   { href: "/#how-it-works", label: "How it works" },
   { href: "/track", label: "Track enrolment" },
+  { href: "/verify", label: "Verify" },
   { href: "/#faq", label: "FAQ" },
 ];
 

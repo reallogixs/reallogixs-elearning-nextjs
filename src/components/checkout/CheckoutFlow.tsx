@@ -115,7 +115,7 @@ export function CheckoutFlow({ slug }: { slug: string }): ReactElement {
 
         {state !== "open" ? (
           <Alert tone="warning" title="Enrolment unavailable">
-            This batch isn&apos;t taking enrolments right now.
+            This class isn&apos;t taking enrolments right now.
           </Alert>
         ) : (
           <div className="flex flex-col gap-8 rounded-lg border border-line p-5 sm:p-8 lg:p-10">

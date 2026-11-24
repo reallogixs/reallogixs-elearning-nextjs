@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { useToast } from "@/components/ui/Toast";
 
+import { ClassAccess } from "./ClassAccess";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 import { OrderTimeline } from "./OrderTimeline";
 import { ReceiptForm } from "./ReceiptForm";
@@ -66,7 +67,12 @@ export function OrderStatusPanel({ orderId }: { orderId: string }): ReactElement
         </Alert>
       ) : null}
 
-      {order.status === "confirmed" ? <WhatsAppCta community={db.content.community} /> : null}
+      {order.status === "confirmed" ? (
+        <>
+          <ClassAccess order={order} />
+          <WhatsAppCta community={db.content.community} />
+        </>
+      ) : null}
 
       {order.status === "rejected" ? (
         <Card className="flex flex-col gap-5">
