@@ -1,8 +1,4 @@
-/**
- * Domain model for the Reallogixs Academy. These shapes mirror the future Supabase
- * tables one-to-one, so swapping the mock store for a real backend keeps every
- * component unchanged.
- */
+/** Domain model: the shapes screens work with. Queries map database rows to these. */
 
 export type ID = string;
 /** ISO 8601 timestamp or date string. */
@@ -71,7 +67,7 @@ export interface PaymentField {
 export interface PaymentMethod {
   id: ID;
   name: string;
-  /** Uploaded logo (data URL in the mock, Cloudinary URL later). null shows initials. */
+  /** Uploaded logo. null shows initials. */
   logoUrl: string | null;
   fields: PaymentField[];
   instructions: string;
@@ -84,8 +80,6 @@ interface UserBase {
   name: string;
   email: string;
   phone: string;
-  /** MOCK ONLY: plain text so the demo works offline. Supabase Auth replaces this. */
-  password: string;
   createdAt: ISODate;
 }
 
@@ -116,7 +110,7 @@ export interface Receipt {
   id: ID;
   fileName: string;
   mimeType: string;
-  /** Data URL in the mock; a Cloudinary URL later. */
+  /** Only served to people allowed to see it. */
   url: string;
   transactionRef: string;
   uploadedAt: ISODate;
@@ -229,29 +223,6 @@ export interface Meeting {
   denied: DeniedEntry[];
 }
 
-export type EmailKind =
-  | "teacher_welcome"
-  | "student_welcome"
-  | "order_received"
-  | "order_confirmed"
-  | "order_rejected"
-  | "password_changed"
-  | "payout_sent"
-  | "zoom_invite"
-  | "certificate_issued";
-
-/** Mock outbox: what would be emailed once SMTP is connected. */
-export interface OutboxEmail {
-  id: ID;
-  kind: EmailKind;
-  to: string;
-  subject: string;
-  body: string;
-  /** Files that go with the email; the mock links to the page the PDF is made from. */
-  attachments?: { name: string; href: string }[];
-  createdAt: ISODate;
-}
-
 export interface Testimonial {
   id: ID;
   name: string;
@@ -359,22 +330,16 @@ export interface SiteContent {
   };
 }
 
-export interface Database {
-  version: number;
+/** The development seed, in `src/mocks`. */
+export interface SeedData {
   categories: Category[];
   instructors: Instructor[];
   courses: Course[];
   paymentMethods: PaymentMethod[];
-  users: User[];
+  users: (User & { password: string })[];
   orders: Order[];
   payouts: Payout[];
   certificates: Certificate[];
   meetings: Meeting[];
-  outbox: OutboxEmail[];
   content: SiteContent;
-}
-
-export interface Session {
-  userId: ID;
-  role: Role;
 }

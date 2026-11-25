@@ -3,16 +3,16 @@
 import type { ReactElement } from "react";
 import { Form, Formik } from "formik";
 
-import { authApi } from "@/lib/api";
 import { changePasswordSchema, type ChangePasswordInput } from "@/lib/validation/auth";
 import { SubmitButton } from "@/components/form/SubmitButton";
 import { TextField } from "@/components/form/TextField";
 import { Card } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
+import { changePassword } from "@/server/actions/account";
 
 const initialValues: ChangePasswordInput = { current: "", next: "", confirm: "" };
 
-export function ChangePasswordForm({ userId }: { userId: string }): ReactElement {
+export function ChangePasswordForm(): ReactElement {
   const { notify } = useToast();
   return (
     <Card className="flex flex-col gap-5">
@@ -21,16 +21,16 @@ export function ChangePasswordForm({ userId }: { userId: string }): ReactElement
         initialValues={initialValues}
         validationSchema={changePasswordSchema}
         onSubmit={async (values, { setFieldError, resetForm }) => {
-          const result = await authApi.changePassword(userId, values.current, values.next);
+          const result = await changePassword(values);
           if (!result.ok) {
             setFieldError("current", result.error);
             return;
           }
           resetForm();
-          notify("Password updated.");
+          notify("Password updated. Other devices were signed out.");
         }}
       >
-        <Form noValidate className="grid gap-5 md:grid-cols-3">
+        <Form method="post" noValidate className="grid gap-5 md:grid-cols-3">
           <TextField
             name="current"
             label="Current password"

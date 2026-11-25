@@ -5,9 +5,10 @@ import { Award, Users, Video } from "lucide-react";
 
 import { formatClassTime, formatDate, formatDateTime } from "@/lib/domain/format";
 import { eligibleOrders, isInMeeting } from "@/lib/domain/meeting";
-import { useDb } from "@/lib/store/hooks";
-import { courseById, meetingFor } from "@/lib/store/selectors";
+import { courseById, meetingFor } from "@/lib/portal/selectors";
+import { useAutoRefresh } from "@/lib/useAutoRefresh";
 import { formatZoomId } from "@/lib/zoom/client";
+import { usePortalData } from "@/components/data/PortalData";
 import { ClassStatusBadge } from "@/components/classes/ClassStatusBadge";
 import { DashCard } from "@/components/portal/DashCard";
 import { PageHeader } from "@/components/portal/PageHeader";
@@ -20,9 +21,11 @@ import { ClassControls } from "./ClassControls";
 import { ClassRoster } from "./ClassRoster";
 
 export function ClassRoom({ courseId }: { courseId: string }): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   const course = courseById(db, courseId);
   const meeting = meetingFor(db, courseId);
+  // Students arrive and leave on their own while the class is live.
+  useAutoRefresh(meeting?.status === "live");
   if (!course || !meeting) return <EmptyState title="Class not found" />;
   const inside = meeting.registrants.filter((row) => isInMeeting(meeting, row.orderId)).length;
 

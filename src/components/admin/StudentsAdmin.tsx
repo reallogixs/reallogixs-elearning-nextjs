@@ -3,8 +3,8 @@
 import { useState, type ReactElement } from "react";
 
 import { formatPKR, normalisePhone } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
-import { students } from "@/lib/store/selectors";
+import { students } from "@/lib/portal/selectors";
+import { usePortalData } from "@/components/data/PortalData";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { DataTable } from "@/components/ui/DataTable";
@@ -22,7 +22,7 @@ interface StudentRow {
 
 /** Registered students plus guests, grouped by email so repeat guests appear once. */
 export function StudentsAdmin(): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   const [query, setQuery] = useState("");
   const rows = new Map<string, StudentRow>();
 

@@ -4,14 +4,14 @@ import type { ReactElement } from "react";
 import { Quote } from "lucide-react";
 
 import { initials } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
+import { useContent } from "@/components/data/SiteData";
 import { Grain } from "@/components/motion/Grain";
 import { Reveal } from "@/components/motion/Reveal";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 
 /** Deep-gradient band with grain and glass quote cards (main site testimonials look). */
 export function Testimonials(): ReactElement | null {
-  const { testimonials, sections } = useDb().content;
+  const { testimonials, sections } = useContent();
   const copy = sections.testimonials;
   if (testimonials.length === 0) return null;
   return (

@@ -2,16 +2,17 @@
 
 import { useState, type ReactElement } from "react";
 
-import { ordersApi } from "@/lib/api";
+import type { Result } from "@/types/forms";
 import { latestReceipt } from "@/lib/domain/orders";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
-import { courseById, paymentMethodById } from "@/lib/store/selectors";
+import { courseById, paymentMethodById } from "@/lib/portal/selectors";
+import { usePortalData } from "@/components/data/PortalData";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { OrderTimeline } from "@/components/orders/OrderTimeline";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { cancelOrder, confirmOrder, rejectOrder } from "@/server/actions/orders";
 
 import { OrderFacts } from "./OrderFacts";
 import { ReceiptPreview } from "./ReceiptPreview";
@@ -24,11 +25,20 @@ interface OrderReviewModalProps {
 
 /** Receipt check: compare the receipt with the expected amount, then confirm or reject. */
 export function OrderReviewModal({ orderId, onClose }: OrderReviewModalProps): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   const { run, pending } = useAction();
   const [rejecting, setRejecting] = useState(false);
   const order = db.orders.find((candidate) => candidate.id === orderId);
   const receipt = order ? latestReceipt(order) : undefined;
+  const reused = receipt
+    ? db.orders.filter(
+        (other) =>
+          other.id !== orderId &&
+          other.receipts.some(
+            (item) => item.transactionRef.toLowerCase() === receipt.transactionRef.toLowerCase(),
+          ),
+      )
+    : [];
   const course = order ? courseById(db, order.courseId) : undefined;
 
   function close(): void {
@@ -36,11 +46,7 @@ export function OrderReviewModal({ orderId, onClose }: OrderReviewModalProps): R
     onClose();
   }
 
-  async function act(
-    key: string,
-    action: () => ReturnType<typeof ordersApi.confirmOrder>,
-    message: string,
-  ): Promise<void> {
+  async function act(key: string, action: () => Promise<Result>, message: string): Promise<void> {
     const result = await run(key, action, message);
     if (result.ok) close();
   }
@@ -77,7 +83,7 @@ export function OrderReviewModal({ orderId, onClose }: OrderReviewModalProps): R
             onClick={() =>
               act(
                 "confirm",
-                () => ordersApi.confirmOrder(order.id),
+                () => confirmOrder({ number: order.id }),
                 "Payment confirmed. The student can now see the WhatsApp link.",
               )
             }
@@ -96,7 +102,7 @@ export function OrderReviewModal({ orderId, onClose }: OrderReviewModalProps): R
         onClick={async () => {
           const result = await run(
             "cancel",
-            () => ordersApi.cancelOrder(order.id),
+            () => cancelOrder({ number: order.id }),
             "Order cancelled.",
           );
           if (result.ok) close();
@@ -124,6 +130,11 @@ export function OrderReviewModal({ orderId, onClose }: OrderReviewModalProps): R
             ) : (
               <Alert tone="warning">No receipt uploaded.</Alert>
             )}
+            {reused.length ? (
+              <Alert tone="warning" title="This reference was used before">
+                Also on {reused.map((other) => other.id).join(", ")}.
+              </Alert>
+            ) : null}
             {order.receipts.length > 1 ? (
               <p className="text-small text-ink-soft">
                 {order.receipts.length - 1} earlier receipt(s) on file.
@@ -142,7 +153,7 @@ export function OrderReviewModal({ orderId, onClose }: OrderReviewModalProps): R
                 onSubmit={(reason) =>
                   act(
                     "reject",
-                    () => ordersApi.rejectOrder(order.id, reason),
+                    () => rejectOrder({ number: order.id, reason }),
                     "Receipt rejected. The student has been notified.",
                   )
                 }

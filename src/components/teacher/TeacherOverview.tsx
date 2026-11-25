@@ -5,10 +5,10 @@ import { Clock, HandCoins, Users, Wallet } from "lucide-react";
 
 import { confirmedAt, periodChange, weeklySeries } from "@/lib/domain/analytics";
 import { formatCompactPKR, formatPKR } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
-import { byNewest, ordersForTeacher, teacherSummary } from "@/lib/store/selectors";
-import { useTeacher } from "@/lib/store/useRoleUser";
+import { byNewest, ordersForTeacher, teacherSummary } from "@/lib/portal/selectors";
+import { useTeacher } from "@/lib/account/useRoleUser";
 import { useNow } from "@/lib/useNow";
+import { usePortalData } from "@/components/data/PortalData";
 import { AreaChart } from "@/components/charts/AreaChart";
 import { DashCard } from "@/components/portal/DashCard";
 import { PageHeader } from "@/components/portal/PageHeader";
@@ -21,7 +21,7 @@ import { ReferralsTable } from "./ReferralsTable";
 const WEEKS = 12;
 
 export function TeacherOverview(): ReactElement | null {
-  const db = useDb();
+  const db = usePortalData();
   const teacher = useTeacher();
   const now = useNow();
   const orders = useMemo(() => (teacher ? ordersForTeacher(db, teacher.id) : []), [db, teacher]);

@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 
 import type { Role } from "@/types/domain";
 import { cn } from "@/lib/cn";
-import { useDb } from "@/lib/store/hooks";
 
 import { PORTAL_NAV, portalItems } from "./navConfig";
+import { PendingCount } from "./PendingCount";
 
 export function isActivePath(pathname: string, href: string, root: string): boolean {
   return href === root ? pathname === root : pathname === href || pathname.startsWith(`${href}/`);
@@ -16,16 +16,14 @@ export function isActivePath(pathname: string, href: string, root: string): bool
 
 export function PortalNav({
   role,
+  pending,
   onNavigate,
 }: {
   role: Role;
+  pending?: Promise<number>;
   onNavigate?: () => void;
 }): ReactElement {
   const pathname = usePathname();
-  const db = useDb();
-  const counts = {
-    pendingPayments: db.orders.filter((order) => order.status === "pending").length,
-  };
   const root = portalItems(role)[0]?.href ?? "/";
 
   return (
@@ -40,7 +38,6 @@ export function PortalNav({
           <ul className="flex flex-col gap-0.5">
             {group.items.map(({ href, label, icon: Icon, badge }) => {
               const active = isActivePath(pathname, href, root);
-              const count = badge ? counts[badge] : 0;
               return (
                 <li key={href}>
                   <Link
@@ -65,12 +62,16 @@ export function PortalNav({
                       className={cn("size-[18px]", active ? "text-teal-700" : "text-ink-soft/80")}
                     />
                     <span className="flex-1">{label}</span>
-                    {count > 0 ? (
-                      <span className="min-w-6 rounded-pill bg-navy-900 px-2 text-center text-dash-meta leading-5 text-white">
-                        {count}
-                        <span className="sr-only"> waiting</span>
-                      </span>
-                    ) : null}
+                    <PendingCount count={badge ? pending : undefined}>
+                      {(count) =>
+                        count > 0 ? (
+                          <span className="min-w-6 rounded-pill bg-navy-900 px-2 text-center text-dash-meta leading-5 text-white">
+                            {count}
+                            <span className="sr-only"> waiting</span>
+                          </span>
+                        ) : null
+                      }
+                    </PendingCount>
                   </Link>
                 </li>
               );

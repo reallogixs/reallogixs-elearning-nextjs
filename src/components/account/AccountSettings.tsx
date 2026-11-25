@@ -2,7 +2,7 @@
 
 import type { ReactElement } from "react";
 
-import { useCurrentUser } from "@/lib/store/hooks";
+import { useCurrentUser } from "@/lib/account/useCurrentUser";
 import { PageHeader } from "@/components/portal/PageHeader";
 
 import { ChangePasswordForm } from "./ChangePasswordForm";
@@ -16,7 +16,7 @@ export function AccountSettings(): ReactElement | null {
     <>
       <PageHeader title="Settings" description="Update your details and password." />
       <ProfileForm user={user} />
-      <ChangePasswordForm userId={user.id} />
+      <ChangePasswordForm />
     </>
   );
 }

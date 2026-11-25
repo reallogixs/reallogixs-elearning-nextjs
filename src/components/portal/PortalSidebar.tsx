@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
 import type { Role } from "@/types/domain";
-import { authApi } from "@/lib/api";
-import { useCurrentUser } from "@/lib/store/hooks";
+import { PAGE, startLoading } from "@/lib/loadingBar";
+import { LOGIN_PATH } from "@/lib/account/loginPath";
+import { refreshAccount } from "@/lib/account/accountStore";
+import { useCurrentUser } from "@/lib/account/useCurrentUser";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { IconButton } from "@/components/ui/IconButton";
+import { logout } from "@/server/actions/account";
 
 import { PORTAL_TITLE } from "./navConfig";
 import { PortalNav } from "./PortalNav";
@@ -16,6 +19,7 @@ import { UserAvatar } from "./UserAvatar";
 
 interface PortalSidebarProps {
   role: Role;
+  pending?: Promise<number>;
   onNavigate?: () => void;
   /** The mobile drawer shows the logo in its own title bar. */
   showBrand?: boolean;
@@ -23,6 +27,7 @@ interface PortalSidebarProps {
 
 export function PortalSidebar({
   role,
+  pending,
   onNavigate,
   showBrand = true,
 }: PortalSidebarProps): ReactElement {
@@ -36,7 +41,7 @@ export function PortalSidebar({
         </div>
       ) : null}
       <div className="flex-1 overflow-y-auto px-4 py-5">
-        <PortalNav role={role} onNavigate={onNavigate} />
+        <PortalNav role={role} pending={pending} onNavigate={onNavigate} />
       </div>
       <div className="m-3 flex items-center gap-3 rounded-md border border-line/80 bg-canvas p-3">
         <UserAvatar name={user?.name ?? ""} />
@@ -48,9 +53,13 @@ export function PortalSidebar({
         </span>
         <IconButton
           label="Log out"
-          onClick={() => {
-            authApi.logout();
-            router.push("/");
+          onClick={async () => {
+            startLoading(PAGE);
+            await logout({});
+            await refreshAccount();
+            router.push(role === "student" ? "/" : LOGIN_PATH[role]);
+            // Drops cached portal pages from this browser.
+            router.refresh();
           }}
         >
           <LogOut className="size-4" />

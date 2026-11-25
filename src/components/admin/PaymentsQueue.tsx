@@ -2,7 +2,7 @@
 
 import type { ReactElement } from "react";
 
-import { useDb } from "@/lib/store/hooks";
+import { usePortalData } from "@/components/data/PortalData";
 import { PageHeader } from "@/components/portal/PageHeader";
 
 import { OrderReviewModal } from "./OrderReviewModal";
@@ -10,7 +10,7 @@ import { OrdersTable } from "./OrdersTable";
 import { useOrderParam } from "./useOrderParam";
 
 export function PaymentsQueue(): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   const [openId, setOpenId] = useOrderParam();
   const pending = db.orders
     .filter((order) => order.status === "pending")

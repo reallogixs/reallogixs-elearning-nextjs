@@ -3,7 +3,7 @@
 import type { ReactElement } from "react";
 import { UserRound } from "lucide-react";
 
-import { useCurrentUser } from "@/lib/store/hooks";
+import { useCurrentUser } from "@/lib/account/useCurrentUser";
 import { Button } from "@/components/ui/Button";
 
 import { PORTAL_HOME } from "./navigation";

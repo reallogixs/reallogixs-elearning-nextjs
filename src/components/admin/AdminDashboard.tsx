@@ -4,8 +4,8 @@ import { useMemo, type ReactElement } from "react";
 import { BadgeDollarSign, Clock, GraduationCap, Plus, Wallet } from "lucide-react";
 
 import { formatCompactPKR, formatPKR } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
 import { useNow } from "@/lib/useNow";
+import { usePortalData } from "@/components/data/PortalData";
 import { AreaChart } from "@/components/charts/AreaChart";
 import { DashCard } from "@/components/portal/DashCard";
 import { PageHeader } from "@/components/portal/PageHeader";
@@ -19,7 +19,7 @@ import { OrderStatusSegments } from "./OrderStatusSegments";
 import { PendingPaymentsList } from "./PendingPaymentsList";
 
 export function AdminDashboard(): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   const now = useNow();
   const metrics = useMemo(() => adminMetrics(db, now), [db, now]);
   const pending = db.orders

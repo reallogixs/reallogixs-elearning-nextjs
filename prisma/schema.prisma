@@ -1,0 +1,535 @@
+// Reallogixs Academy. Change this file, then create a migration; never edit the database by hand.
+// Rules Prisma can't express (checks, row-level security) live in the migrations' SQL.
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/server/db/generated"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Accounts -------------------------------------------------------------------
+
+enum Role {
+  admin
+  teacher
+  student
+}
+
+enum TokenPurpose {
+  set_password
+  reset_password
+  verify_email
+}
+
+model User {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  role            Role
+  name            String
+  /// Always lower case (checked in SQL).
+  email           String    @unique
+  phone           String
+  /// Null until a teacher sets their password from the emailed link.
+  passwordHash    String?   @map("password_hash")
+  /// Guest orders are only linked to an account once its email is verified.
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz
+  active          Boolean   @default(true)
+  archivedAt      DateTime? @map("archived_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  teacher      TeacherProfile?
+  sessions     Session[]
+  tokens       AuthToken[]
+  orders       Order[]
+  orderEvents  OrderEvent[]
+  payoutsMade  Payout[]
+  auditEntries AuditEntry[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model TeacherProfile {
+  userId        String  @id @map("user_id") @db.Uuid
+  user          User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  /// Always upper case (checked in SQL).
+  promoCode     String  @unique @map("promo_code")
+  commissionPct Decimal @map("commission_pct") @db.Decimal(5, 2)
+  discountPct   Decimal @default(0) @map("discount_pct") @db.Decimal(5, 2)
+
+  orders      Order[]
+  commissions Commission[]
+  payouts     Payout[]
+
+  @@map("teacher_profiles")
+}
+
+/// Only a hash of the cookie is stored, so a database leak can't be used to sign in.
+model Session {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique @map("token_hash")
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+/// One-time emailed links: set password, reset password, verify email. Hash only.
+model AuthToken {
+  id        String       @id @default(uuid(7)) @db.Uuid
+  userId    String       @map("user_id") @db.Uuid
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose   TokenPurpose
+  tokenHash String       @unique @map("token_hash")
+  expiresAt DateTime     @map("expires_at") @db.Timestamptz
+  usedAt    DateTime?    @map("used_at") @db.Timestamptz
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([userId, purpose])
+  @@map("auth_tokens")
+}
+
+/// Attempt counters for login, order lookup, promo codes and certificate checks.
+model RateLimit {
+  /// Action plus a hash of the caller, e.g. "login:9f2c…".
+  key          String   @id
+  count        Int
+  windowEndsAt DateTime @map("window_ends_at") @db.Timestamptz
+
+  @@index([windowEndsAt])
+  @@map("rate_limits")
+}
+
+// Catalogue ------------------------------------------------------------------
+
+model Category {
+  id          String     @id @default(uuid(7)) @db.Uuid
+  name        String
+  slug        String     @unique
+  description String     @default("")
+  parentId    String?    @map("parent_id") @db.Uuid
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children    Category[] @relation("CategoryTree")
+  position    Int        @default(0)
+  archivedAt  DateTime?  @map("archived_at") @db.Timestamptz
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  courses Course[]
+
+  @@index([parentId, position])
+  @@map("categories")
+}
+
+model Instructor {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  name       String
+  title      String
+  bio        String
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  courses Course[]
+
+  @@map("instructors")
+}
+
+enum CourseMode {
+  online
+  physical
+}
+
+enum CourseLevel {
+  beginner
+  intermediate
+  advanced
+}
+
+enum CourseStatus {
+  draft
+  published
+}
+
+model Course {
+  id              String       @id @default(uuid(7)) @db.Uuid
+  slug            String       @unique
+  title           String
+  summary         String
+  description     String
+  categoryId      String       @map("category_id") @db.Uuid
+  category        Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  instructorId    String       @map("instructor_id") @db.Uuid
+  instructor      Instructor   @relation(fields: [instructorId], references: [id], onDelete: Restrict)
+  mode            CourseMode   @default(online)
+  venue           String       @default("Live on Zoom")
+  startsAt        DateTime     @map("starts_at") @db.Timestamptz
+  durationMinutes Int          @map("duration_minutes")
+  seats           Int
+  /// Whole rupees.
+  price           Int
+  level           CourseLevel
+  outcomes        String[]
+  status          CourseStatus @default(draft)
+  enrolmentOpen   Boolean      @default(true) @map("enrolment_open")
+  featured        Boolean      @default(false)
+  archivedAt      DateTime?    @map("archived_at") @db.Timestamptz
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  meeting Meeting?
+  orders  Order[]
+
+  @@index([status, startsAt])
+  @@index([categoryId])
+  @@index([instructorId])
+  @@map("courses")
+}
+
+// Payments -------------------------------------------------------------------
+
+model PaymentMethod {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  name         String
+  /// Cloudinary public id of the logo; null shows initials.
+  logoPublicId String?   @map("logo_public_id")
+  instructions String
+  enabled      Boolean   @default(false)
+  position     Int       @default(0)
+  archivedAt   DateTime? @map("archived_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  fields PaymentField[]
+  orders Order[]
+
+  @@map("payment_methods")
+}
+
+model PaymentField {
+  id              String        @id @default(uuid(7)) @db.Uuid
+  paymentMethodId String        @map("payment_method_id") @db.Uuid
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Cascade)
+  label           String
+  value           String
+  copyable        Boolean       @default(false)
+  position        Int           @default(0)
+
+  @@index([paymentMethodId, position])
+  @@map("payment_fields")
+}
+
+enum OrderStatus {
+  pending
+  rejected
+  confirmed
+  cancelled
+}
+
+enum OrderEventType {
+  placed
+  receipt_uploaded
+  confirmed
+  rejected
+  cancelled
+}
+
+model Order {
+  id              String          @id @default(uuid(7)) @db.Uuid
+  /// What students see: RLX-4F7K2.
+  number          String          @unique
+  courseId        String          @map("course_id") @db.Uuid
+  course          Course          @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  /// Null for guests, until they verify an account with the same email.
+  studentId       String?         @map("student_id") @db.Uuid
+  student         User?           @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  contactName     String          @map("contact_name")
+  contactEmail    String          @map("contact_email")
+  contactPhone    String          @map("contact_phone")
+  /// Digits without the 0/+92 prefix, for tracking by phone.
+  phoneKey        String          @map("phone_key")
+  /// Teacher whose code was used, and the code as typed at the time.
+  teacherId       String?         @map("teacher_id") @db.Uuid
+  teacher         TeacherProfile? @relation(fields: [teacherId], references: [userId], onDelete: Restrict)
+  promoCode       String?         @map("promo_code")
+  /// Price snapshot in whole rupees; later price changes don't affect it.
+  priceBase       Int             @map("price_base")
+  discountPct     Decimal         @default(0) @map("discount_pct") @db.Decimal(5, 2)
+  discount        Int             @default(0)
+  total           Int
+  paymentMethodId String          @map("payment_method_id") @db.Uuid
+  paymentMethod   PaymentMethod   @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  status          OrderStatus     @default(pending)
+  rejectionReason String?         @map("rejection_reason")
+  confirmedAt     DateTime?       @map("confirmed_at") @db.Timestamptz
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+
+  receipts    Receipt[]
+  events      OrderEvent[]
+  commission  Commission?
+  registrant  Registrant[]
+  certificate Certificate?
+
+  /// One live order per email per class.
+  @@unique([courseId, contactEmail], where: raw("status <> 'cancelled'"), map: "orders_one_active_per_email")
+  @@index([status, updatedAt])
+  @@index([courseId, status])
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([contactEmail])
+  @@map("orders")
+}
+
+/// The file is private in Cloudinary; only its id is stored. Links are signed per view.
+model Receipt {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  orderId        String   @map("order_id") @db.Uuid
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  publicId       String   @unique @map("public_id")
+  fileName       String   @map("file_name")
+  mimeType       String   @map("mime_type")
+  bytes          Int
+  transactionRef String   @map("transaction_ref")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([orderId, createdAt])
+  /// Finds the same payment reference used twice.
+  @@index([transactionRef])
+  @@map("receipts")
+}
+
+model OrderEvent {
+  id        String         @id @default(uuid(7)) @db.Uuid
+  orderId   String         @map("order_id") @db.Uuid
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  type      OrderEventType
+  note      String?
+  /// Null when the student (or the system) did it.
+  actorId   String?        @map("actor_id") @db.Uuid
+  actor     User?          @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([orderId, createdAt])
+  @@map("order_events")
+}
+
+/// Rate and amount are fixed when the order is placed; due once the order is confirmed.
+model Commission {
+  orderId   String         @id @map("order_id") @db.Uuid
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  teacherId String         @map("teacher_id") @db.Uuid
+  teacher   TeacherProfile @relation(fields: [teacherId], references: [userId], onDelete: Restrict)
+  pct       Decimal        @db.Decimal(5, 2)
+  amount    Int
+  payoutId  String?        @map("payout_id") @db.Uuid
+  payout    Payout?        @relation(fields: [payoutId], references: [id], onDelete: Restrict)
+
+  @@index([teacherId, payoutId])
+  @@index([payoutId])
+  @@map("commissions")
+}
+
+model Payout {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  teacherId   String         @map("teacher_id") @db.Uuid
+  teacher     TeacherProfile @relation(fields: [teacherId], references: [userId], onDelete: Restrict)
+  amount      Int
+  reference   String
+  createdById String         @map("created_by_id") @db.Uuid
+  createdBy   User           @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  paidAt      DateTime       @default(now()) @map("paid_at") @db.Timestamptz
+
+  commissions Commission[]
+
+  @@index([teacherId, paidAt])
+  @@index([createdById])
+  @@map("payouts")
+}
+
+// Classes and certificates ---------------------------------------------------
+
+enum MeetingStatus {
+  scheduled
+  live
+  ended
+}
+
+model Meeting {
+  id          String        @id @default(uuid(7)) @db.Uuid
+  courseId    String        @unique @map("course_id") @db.Uuid
+  course      Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  zoomId      String        @unique @map("zoom_id")
+  status      MeetingStatus @default(scheduled)
+  startedAt   DateTime?     @map("started_at") @db.Timestamptz
+  endedAt     DateTime?     @map("ended_at") @db.Timestamptz
+  completedAt DateTime?     @map("completed_at") @db.Timestamptz
+
+  registrants Registrant[]
+  refusals    JoinRefusal[]
+
+  @@map("meetings")
+}
+
+/// A paid student allowed into the class. Revoked rather than deleted, so attendance stays.
+model Registrant {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  meetingId String    @map("meeting_id") @db.Uuid
+  meeting   Meeting   @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  orderId   String    @map("order_id") @db.Uuid
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  email     String
+  /// Secret in the personal join link.
+  joinToken String    @unique @map("join_token")
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  attendance Attendance[]
+
+  @@unique([meetingId, email], where: raw("revoked_at IS NULL"), map: "registrants_one_active_per_email")
+  @@unique([orderId], where: raw("revoked_at IS NULL"), map: "registrants_one_active_per_order")
+  @@index([orderId])
+  @@index([meetingId])
+  @@map("registrants")
+}
+
+model Attendance {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  registrantId String     @map("registrant_id") @db.Uuid
+  registrant   Registrant @relation(fields: [registrantId], references: [id], onDelete: Restrict)
+  joinedAt     DateTime   @default(now()) @map("joined_at") @db.Timestamptz
+  leftAt       DateTime?  @map("left_at") @db.Timestamptz
+
+  /// A student can only be in the class once at a time.
+  @@unique([registrantId], where: raw("left_at IS NULL"), map: "attendance_one_open")
+  @@index([registrantId])
+  @@map("attendance")
+}
+
+model JoinRefusal {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  meetingId String   @map("meeting_id") @db.Uuid
+  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  email     String
+  reason    String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([meetingId, createdAt])
+  @@map("join_refusals")
+}
+
+/// Name and title are copied so a certificate never changes after it is issued.
+model Certificate {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  code        String    @unique
+  orderId     String    @unique @map("order_id") @db.Uuid
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  studentName String    @map("student_name")
+  courseTitle String    @map("course_title")
+  issuedAt    DateTime  @default(now()) @map("issued_at") @db.Timestamptz
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz
+
+  @@map("certificates")
+}
+
+// Email and history ----------------------------------------------------------
+
+enum EmailStatus {
+  queued
+  sent
+  failed
+}
+
+/// A record of each email, never its text: links and tokens are not stored here.
+model EmailMessage {
+  id        String      @id @default(uuid(7)) @db.Uuid
+  template  String
+  to        String
+  subject   String
+  status    EmailStatus @default(queued)
+  attempts  Int         @default(0)
+  error     String?
+  /// The record it is about, e.g. an order id, so it can be sent again.
+  entityId  String?     @map("entity_id")
+  sentAt    DateTime?   @map("sent_at") @db.Timestamptz
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([status, createdAt])
+  @@map("email_messages")
+}
+
+/// Who changed what in the admin panel.
+model AuditEntry {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  actorId   String   @map("actor_id") @db.Uuid
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action    String
+  entity    String
+  entityId  String   @map("entity_id")
+  details   Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_entries")
+}
+
+// Site content ---------------------------------------------------------------
+
+/// One row per one-off block (hero, footer, page intros…). Checked by the Yup schemas.
+model ContentBlock {
+  /// e.g. "hero", "sections.featured", "pages.courses"
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("content_blocks")
+}
+
+model Faq {
+  id       String @id @default(uuid(7)) @db.Uuid
+  question String
+  answer   String
+  position Int    @default(0)
+
+  @@map("faqs")
+}
+
+model Testimonial {
+  id            String  @id @default(uuid(7)) @db.Uuid
+  name          String
+  role          String
+  quote         String
+  isPlaceholder Boolean @default(false) @map("is_placeholder")
+  position      Int     @default(0)
+
+  @@map("testimonials")
+}
+
+model ProcessStep {
+  id       String @id @default(uuid(7)) @db.Uuid
+  title    String
+  body     String
+  position Int    @default(0)
+
+  @@map("process_steps")
+}
+
+model SiteStat {
+  id       String @id @default(uuid(7)) @db.Uuid
+  value    String
+  label    String
+  position Int    @default(0)
+
+  @@map("site_stats")
+}

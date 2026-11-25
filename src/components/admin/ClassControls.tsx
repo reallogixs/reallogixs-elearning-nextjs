@@ -4,17 +4,17 @@ import { useState, type ReactElement } from "react";
 import { CircleCheck, CircleStop, Play } from "lucide-react";
 
 import type { Meeting } from "@/types/domain";
-import { meetingsApi } from "@/lib/api";
 import { eligibleOrders } from "@/lib/domain/meeting";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
+import { usePortalData } from "@/components/data/PortalData";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
+import { completeClass, endClass, startClass } from "@/server/actions/classes";
 
 /** Start, end and complete. Start/end stand in for Zoom's own host controls in the demo. */
 export function ClassControls({ meeting }: { meeting: Meeting }): ReactElement | null {
-  const db = useDb();
+  const db = usePortalData();
   const { run, pending } = useAction();
   const { notify } = useToast();
   const [completing, setCompleting] = useState(false);
@@ -24,7 +24,7 @@ export function ClassControls({ meeting }: { meeting: Meeting }): ReactElement |
   if (meeting.completedAt) return null;
 
   async function complete(): Promise<void> {
-    const result = await run("complete", () => meetingsApi.completeClass(courseId));
+    const result = await run("complete", () => completeClass({ id: courseId }));
     if (result.ok)
       notify(
         result.data.issued === 1
@@ -44,7 +44,7 @@ export function ClassControls({ meeting }: { meeting: Meeting }): ReactElement |
           onClick={() =>
             run(
               "start",
-              () => meetingsApi.startMeeting(courseId),
+              () => startClass({ id: courseId }),
               "Class started. Enrolment is now closed.",
             )
           }
@@ -58,7 +58,7 @@ export function ClassControls({ meeting }: { meeting: Meeting }): ReactElement |
           variant="danger"
           icon={<CircleStop className="size-4" />}
           loading={pending === "end"}
-          onClick={() => run("end", () => meetingsApi.endMeeting(courseId), "Class ended.")}
+          onClick={() => run("end", () => endClass({ id: courseId }), "Class ended.")}
         >
           End class
         </Button>

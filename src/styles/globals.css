@@ -470,3 +470,54 @@ dialog.drawer[open]::backdrop {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
+
+/* Top loading bar (components/ui/LoadingBar). It eases towards the end and never quite arrives
+   until the page does. */
+@keyframes rl-loading-bar {
+  from {
+    transform: scaleX(0);
+  }
+  12% {
+    transform: scaleX(0.3);
+  }
+  40% {
+    transform: scaleX(0.65);
+  }
+  to {
+    transform: scaleX(0.95);
+  }
+}
+@keyframes rl-loading-bar-done {
+  from {
+    transform: scaleX(0.95);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+.loading-bar-active {
+  animation: rl-loading-bar 10s var(--ease-out-expo, ease-out) forwards;
+}
+.loading-bar-done {
+  animation: rl-loading-bar-done 0.4s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-bar-active,
+  .loading-bar-done {
+    animation: none;
+  }
+  .loading-bar-done {
+    opacity: 0;
+  }
+}
+@media print {
+  .loading-bar {
+    display: none;
+  }
+}

@@ -4,7 +4,6 @@ import { Inter, JetBrains_Mono, Plus_Jakarta_Sans, Sora } from "next/font/google
 
 import { SITE } from "@/lib/seo";
 import { AppProviders } from "@/components/providers/AppProviders";
-import { DemoSwitcher } from "@/components/demo/DemoSwitcher";
 
 import "@/styles/globals.css";
 
@@ -51,10 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }): React
       className={`${sora.variable} ${inter.variable} ${jetbrainsMono.variable} ${jakarta.variable}`}
     >
       <body>
-        <AppProviders>
-          {children}
-          <DemoSwitcher />
-        </AppProviders>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

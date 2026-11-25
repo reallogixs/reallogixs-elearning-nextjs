@@ -4,11 +4,10 @@ import type { ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { Form, Formik } from "formik";
 
-import type { Course } from "@/types/domain";
-import { catalogueApi } from "@/lib/api";
+import type { Category, Course, Instructor } from "@/types/domain";
 import { slugify, toPktInput } from "@/lib/domain/format";
+import { PAGE, startLoading } from "@/lib/loadingBar";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
 import { courseSchema, type CourseFormValues } from "@/lib/validation/admin";
 import { SelectField } from "@/components/form/SelectField";
 import { SubmitButton } from "@/components/form/SubmitButton";
@@ -18,6 +17,7 @@ import { TextareaField } from "@/components/form/TextareaField";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Switch } from "@/components/ui/Switch";
+import { saveCourse } from "@/server/actions/catalogue";
 
 import { categoryOptions } from "./categoryOptions";
 
@@ -47,8 +47,13 @@ function toForm(course?: Course): CourseFormValues {
   };
 }
 
-export function CourseForm({ course }: { course?: Course }): ReactElement {
-  const db = useDb();
+export interface CourseFormProps {
+  course?: Course;
+  categories: Category[];
+  instructors: Instructor[];
+}
+
+export function CourseForm({ course, categories, instructors }: CourseFormProps): ReactElement {
   const router = useRouter();
   const { run } = useAction();
 
@@ -59,10 +64,12 @@ export function CourseForm({ course }: { course?: Course }): ReactElement {
       onSubmit={async (values) => {
         const result = await run(
           "save",
-          () => catalogueApi.saveCourse(values, course?.id),
+          () => saveCourse({ ...values, id: course?.id ?? "" }),
           course ? "Course updated." : "Course and Zoom meeting created.",
         );
-        if (result.ok) router.push("/admin/courses");
+        if (!result.ok) return;
+        startLoading(PAGE);
+        router.push("/admin/courses");
       }}
     >
       {({ values, handleBlur, setFieldValue }) => (
@@ -90,13 +97,13 @@ export function CourseForm({ course }: { course?: Course }): ReactElement {
               label="Category"
               hint="Any level of the category tree."
               placeholder="Choose a category"
-              options={categoryOptions(db.categories)}
+              options={categoryOptions(categories)}
             />
             <SelectField
               name="instructorId"
               label="Instructor"
               placeholder="Choose an instructor"
-              options={db.instructors.map((instructor) => ({
+              options={instructors.map((instructor) => ({
                 value: instructor.id,
                 label: instructor.name,
               }))}

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { ArrowUpRight, Mail, Menu } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useDb } from "@/lib/store/hooks";
+import { useContent } from "@/components/data/SiteData";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { Button } from "@/components/ui/Button";
 import { Drawer } from "@/components/ui/Drawer";
@@ -19,7 +19,7 @@ import { SITE_NAV } from "./navigation";
 export function MobileNav(): ReactElement {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { contact } = useDb().content;
+  const { contact } = useContent();
   const close = (): void => setOpen(false);
 
   return (

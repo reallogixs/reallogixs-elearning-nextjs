@@ -2,15 +2,16 @@
 
 import type { ReactElement } from "react";
 
-import { useDb } from "@/lib/store/hooks";
+import { useContent } from "@/components/data/SiteData";
 import { Accordion } from "@/components/ui/Accordion";
 import { Button } from "@/components/ui/Button";
 import { Section } from "@/components/ui/Section";
 
 import { ContentHeading } from "./ContentHeading";
 
-export function FaqSection(): ReactElement {
-  const { faqs, contact, sections } = useDb().content;
+export function FaqSection(): ReactElement | null {
+  const { faqs, contact, sections } = useContent();
+  if (faqs.length === 0) return null;
   return (
     <Section
       id="faq"

@@ -1,11 +1,12 @@
 import type { ReactElement } from "react";
 
-import type { Course, PriceBreakdown } from "@/types/domain";
+import type { CatalogueCourse } from "@/types/catalogue";
+import type { PriceBreakdown } from "@/types/domain";
 import { formatDateTime, formatPKR } from "@/lib/domain/format";
 import { MODE_LABEL } from "@/components/courses/courseLabels";
 
 interface PriceSummaryProps {
-  course: Course;
+  course: CatalogueCourse;
   price: PriceBreakdown;
   promoCode: string | null;
 }

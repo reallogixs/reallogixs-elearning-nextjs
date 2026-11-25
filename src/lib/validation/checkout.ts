@@ -1,6 +1,6 @@
 import * as yup from "yup";
 
-import { emailSchema, nameSchema, phoneSchema } from "./shared";
+import { emailSchema, nameSchema, phoneSchema, uuidSchema } from "./shared";
 
 export const contactSchema = yup.object({
   name: nameSchema,
@@ -55,13 +55,25 @@ export const receiptSchema = yup.object({
 });
 export type ReceiptInput = yup.InferType<typeof receiptSchema>;
 
-export const orderLookupSchema = yup.object({
-  orderId: yup
-    .string()
-    .trim()
-    .uppercase()
-    .required("Enter your order number.")
-    .matches(/^RLX-[A-Z0-9]{5,6}$/, "Order numbers look like RLX-4F7K2."),
-  phone: phoneSchema,
-});
+export const orderNumberSchema = yup
+  .string()
+  .trim()
+  .uppercase()
+  .required("Enter your order number.")
+  .matches(/^RLX-[A-Z0-9]{5,8}$/, "Order numbers look like RLX-4F7K2P.");
+
+export const orderLookupSchema = yup.object({ orderId: orderNumberSchema, phone: phoneSchema });
 export type OrderLookupInput = yup.InferType<typeof orderLookupSchema>;
+
+/* What the server actions accept ----------------------------------------- */
+
+export const placeOrderSchema = receiptSchema.shape({
+  contact: contactSchema.required(),
+  courseId: uuidSchema.required(),
+  paymentMethodId: uuidSchema.required("Choose a payment method."),
+  promoCode: yup.string().trim().uppercase().max(20).default(""),
+  /** What the student was shown, so a price change never goes unnoticed. */
+  expectedTotal: yup.number().required().integer().min(0),
+});
+
+export const reuploadSchema = receiptSchema.concat(orderLookupSchema);

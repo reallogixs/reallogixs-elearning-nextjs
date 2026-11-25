@@ -102,7 +102,7 @@ export function generateHistory(end: Date, count = 40): Order[] {
             : "confirmed";
     const first = pick(FIRST, random);
     const last = pick(LAST, random);
-    const id = `RLX-H${String(index).padStart(2, "0")}${"ABCDEFGHJK"[index % 10]}`;
+    const id = `RLX-DH${String(index).padStart(2, "0")}${"ABCDEFGHJK"[index % 10]}`;
     const ref = `${method.name.slice(0, 2).toUpperCase()}${Math.floor(random() * 9e6 + 1e6)}`;
     const createdIso = created.toISOString();
     const decidedIso = new Date(created.getTime() + 5 * 3_600_000).toISOString();

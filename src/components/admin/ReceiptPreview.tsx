@@ -9,7 +9,7 @@ export function ReceiptPreview({ receipt }: { receipt: Receipt }): ReactElement 
   return (
     <figure className="flex flex-col gap-2">
       {isImage ? (
-        // eslint-disable-next-line @next/next/no-img-element -- data URLs from uploads; next/image can't optimise these.
+        // eslint-disable-next-line @next/next/no-img-element -- private, served per viewer; next/image must not cache it.
         <img
           src={receipt.url}
           alt={`Payment receipt, reference ${receipt.transactionRef}`}

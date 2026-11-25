@@ -1,10 +1,10 @@
 "use client";
 
 import type { ReactElement } from "react";
+import { useRouter } from "next/navigation";
 import { Form, Formik } from "formik";
 
-import type { TeacherUser } from "@/types/domain";
-import { teachersApi } from "@/lib/api";
+import type { TeacherAccount } from "@/types/account";
 import { useAction } from "@/lib/useAction";
 import { teacherSchema, type TeacherFormValues } from "@/lib/validation/admin";
 import { SubmitButton } from "@/components/form/SubmitButton";
@@ -12,17 +12,21 @@ import { TextField } from "@/components/form/TextField";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/Toast";
+import { createTeacher, updateTeacher } from "@/server/actions/teachers";
 
-export type TeacherDraft = { teacher?: TeacherUser } | null;
+export type TeacherDraft = { teacher?: TeacherAccount } | null;
 
 function TeacherForm({
   teacher,
   onDone,
 }: {
-  teacher?: TeacherUser;
+  teacher?: TeacherAccount;
   onDone: () => void;
 }): ReactElement {
   const { run } = useAction();
+  const { notify } = useToast();
+  const router = useRouter();
   const initialValues: TeacherFormValues = {
     name: teacher?.name ?? "",
     email: teacher?.email ?? "",
@@ -41,15 +45,14 @@ function TeacherForm({
         const result = teacher
           ? await run(
               "save",
-              () => teachersApi.updateTeacher(teacher.id, values),
+              () => updateTeacher({ ...values, id: teacher.id }),
               "Teacher updated. New rates apply to future sales.",
             )
-          : await run(
-              "save",
-              () => teachersApi.createTeacher(values),
-              "Teacher added. Welcome email with password and code sent (see Outbox).",
-            );
-        if (result.ok) onDone();
+          : await run("save", () => createTeacher(values));
+        if (!result.ok) return;
+        if (result.data) notify(result.data.notice);
+        router.refresh();
+        onDone();
       }}
     >
       <Form noValidate className="grid gap-5 sm:grid-cols-2">
@@ -88,8 +91,7 @@ function TeacherForm({
         />
         {!teacher ? (
           <Alert tone="info" className="sm:col-span-2">
-            A temporary password is generated and emailed with the promo code. Teachers can change
-            it from their portal.
+            They get an email with their promo code and a one-time link to choose a password.
           </Alert>
         ) : null}
         <div className="flex justify-end gap-3 sm:col-span-2">

@@ -6,12 +6,12 @@ import { CircleCheck } from "lucide-react";
 
 import type { Order } from "@/types/domain";
 import { formatDateTime, formatPKR } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
-import { courseById } from "@/lib/store/selectors";
+import { courseById } from "@/lib/portal/selectors";
+import { usePortalData } from "@/components/data/PortalData";
 import { UserAvatar } from "@/components/portal/UserAvatar";
 
 export function PendingPaymentsList({ orders }: { orders: Order[] }): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   if (orders.length === 0) {
     return (
       <p className="flex items-center gap-2 rounded-sm bg-success/10 px-4 py-3 text-small text-success-text">

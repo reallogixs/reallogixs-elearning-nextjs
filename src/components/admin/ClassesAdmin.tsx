@@ -5,8 +5,8 @@ import Link from "next/link";
 
 import { formatClassTime, formatDate } from "@/lib/domain/format";
 import { eligibleOrders } from "@/lib/domain/meeting";
-import { useDb } from "@/lib/store/hooks";
-import { meetingFor } from "@/lib/store/selectors";
+import { meetingFor } from "@/lib/portal/selectors";
+import { usePortalData } from "@/components/data/PortalData";
 import { ClassStatusBadge } from "@/components/classes/ClassStatusBadge";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 
 /** Every course's Zoom class, soonest first; past ones at the end. */
 export function ClassesAdmin(): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   const rows = db.courses
     .flatMap((course) => {
       const meeting = meetingFor(db, course.id);

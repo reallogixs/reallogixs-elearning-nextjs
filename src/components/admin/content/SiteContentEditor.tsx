@@ -2,11 +2,10 @@
 
 import { useState, type ReactElement } from "react";
 
-import { useDb, useHydrated } from "@/lib/store/hooks";
+import type { SiteContent } from "@/types/domain";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { ChipGroup } from "@/components/ui/ChipGroup";
-import { Skeleton } from "@/components/ui/Skeleton";
 
 import { EnrolmentContentTab } from "./EnrolmentContentTab";
 import { FooterContentTab } from "./FooterContentTab";
@@ -30,12 +29,8 @@ const PREVIEW: Record<Tab, string> = {
 };
 
 /** Every piece of public copy, grouped by where it appears. */
-export function SiteContentEditor(): ReactElement {
-  const { content } = useDb();
-  const hydrated = useHydrated();
+export function SiteContentEditor({ content }: { content: SiteContent }): ReactElement {
   const [tab, setTab] = useState<Tab>("home");
-  // Forms copy their initial value, so wait for saved data before mounting them.
-  if (!hydrated) return <Skeleton className="h-96" />;
 
   return (
     <>

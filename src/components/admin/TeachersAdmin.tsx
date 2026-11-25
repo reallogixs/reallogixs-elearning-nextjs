@@ -1,25 +1,46 @@
 "use client";
 
 import { useState, type ReactElement } from "react";
+import { useRouter } from "next/navigation";
 import { KeyRound, Pencil, UserPlus } from "lucide-react";
 
-import { teachersApi } from "@/lib/api";
+import type { TeacherAccount } from "@/types/account";
 import { formatPKR } from "@/lib/domain/format";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
-import { teacherSummary, teachers } from "@/lib/store/selectors";
+import { teacherSummary } from "@/lib/portal/selectors";
+import { usePortalData } from "@/components/data/PortalData";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
 import { IconButton } from "@/components/ui/IconButton";
+import { useToast } from "@/components/ui/Toast";
+import { sendTeacherLink, setTeacherActive } from "@/server/actions/teachers";
 
 import { TeacherFormModal, type TeacherDraft } from "./TeacherFormModal";
 
-export function TeachersAdmin(): ReactElement {
-  const db = useDb();
+export function TeachersAdmin({ accounts }: { accounts: TeacherAccount[] }): ReactElement {
+  const db = usePortalData();
   const { run, pending } = useAction();
+  const { notify } = useToast();
+  const router = useRouter();
   const [draft, setDraft] = useState<TeacherDraft>(null);
+
+  async function toggle(teacher: TeacherAccount): Promise<void> {
+    await run(
+      teacher.id,
+      () => setTeacherActive({ id: teacher.id, active: !teacher.active }),
+      teacher.active
+        ? "Teacher paused and signed out. Their code no longer works."
+        : "Teacher reactivated.",
+    );
+    router.refresh();
+  }
+
+  async function sendLink(teacher: TeacherAccount): Promise<void> {
+    const result = await run(`pw-${teacher.id}`, () => sendTeacherLink({ id: teacher.id }));
+    if (result.ok) notify(result.data.notice);
+  }
 
   return (
     <>
@@ -34,7 +55,7 @@ export function TeachersAdmin(): ReactElement {
       />
       <DataTable
         caption="Teachers"
-        rows={teachers(db)}
+        rows={accounts}
         rowKey={(teacher) => teacher.id}
         columns={[
           {
@@ -75,7 +96,7 @@ export function TeachersAdmin(): ReactElement {
             header: "Status",
             cell: (teacher) => (
               <Badge tone={teacher.active ? "success" : "neutral"}>
-                {teacher.active ? "Active" : "Paused"}
+                {!teacher.active ? "Paused" : teacher.invited ? "Invited" : "Active"}
               </Badge>
             ),
           },
@@ -89,27 +110,13 @@ export function TeachersAdmin(): ReactElement {
                   size="sm"
                   variant="ghost"
                   loading={pending === teacher.id}
-                  onClick={() =>
-                    run(
-                      teacher.id,
-                      () => teachersApi.setTeacherActive(teacher.id, !teacher.active),
-                      teacher.active
-                        ? "Teacher paused. Their code no longer works."
-                        : "Teacher reactivated.",
-                    )
-                  }
+                  onClick={() => toggle(teacher)}
                 >
                   {teacher.active ? "Pause" : "Activate"}
                 </Button>
                 <IconButton
-                  label={`Email a new password to ${teacher.name}`}
-                  onClick={() =>
-                    run(
-                      `pw-${teacher.id}`,
-                      () => teachersApi.resetTeacherPassword(teacher.id),
-                      "New password emailed (see Outbox).",
-                    )
-                  }
+                  label={`Email a password link to ${teacher.name}`}
+                  onClick={() => sendLink(teacher)}
                 >
                   <KeyRound className="size-4" />
                 </IconButton>

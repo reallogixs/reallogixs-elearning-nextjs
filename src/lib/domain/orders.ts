@@ -13,17 +13,17 @@ export function seatsTaken(orders: Order[], courseId: string): number {
     .length;
 }
 
-export function seatsLeft(course: Course, orders: Order[]): number {
-  return Math.max(0, course.seats - seatsTaken(orders, course.id));
-}
-
 export type EnrolmentState = "open" | "full" | "closed" | "started";
 
-export function enrolmentState(course: Course, orders: Order[], now = new Date()): EnrolmentState {
+/** Whether a course takes enrolments, given the seats it has left. */
+export function enrolmentWith(
+  course: Pick<Course, "enrolmentOpen" | "startsAt">,
+  left: number,
+  now = new Date(),
+): EnrolmentState {
   if (!course.enrolmentOpen) return "closed";
-  if (seatsLeft(course, orders) === 0) return "full";
-  if (new Date(course.startsAt) < now) return "started";
-  return "open";
+  if (left === 0) return "full";
+  return new Date(course.startsAt) < now ? "started" : "open";
 }
 
 export const ENROLMENT_LABEL: Record<EnrolmentState, string> = {

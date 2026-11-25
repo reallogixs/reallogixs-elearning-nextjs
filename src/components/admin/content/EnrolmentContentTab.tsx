@@ -3,8 +3,8 @@
 import type { ReactElement } from "react";
 
 import type { SiteContent } from "@/types/domain";
-import { settingsApi } from "@/lib/api";
 import { checkoutContentSchema, communitySchema } from "@/lib/validation/content";
+import { saveContentBlock } from "@/server/actions/content";
 
 import { ContentSection } from "./ContentSection";
 
@@ -27,7 +27,7 @@ export function EnrolmentContentTab({ content }: { content: SiteContent }): Reac
           { key: "body", label: "Message", kind: "multiline" },
         ]}
         schema={communitySchema}
-        onSave={(value) => settingsApi.saveContent("community", value)}
+        onSave={(value) => saveContentBlock({ key: "community", value })}
       />
       <ContentSection
         title="Checkout messages"
@@ -38,7 +38,7 @@ export function EnrolmentContentTab({ content }: { content: SiteContent }): Reac
           { key: "pendingMessage", label: "After submitting", kind: "multiline" },
         ]}
         schema={checkoutContentSchema}
-        onSave={(value) => settingsApi.saveContent("checkout", value)}
+        onSave={(value) => saveContentBlock({ key: "checkout", value })}
       />
     </>
   );

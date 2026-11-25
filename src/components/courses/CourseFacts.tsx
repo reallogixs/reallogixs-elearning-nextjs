@@ -1,13 +1,14 @@
 import type { ReactElement } from "react";
 import { CalendarDays, Clock, Gauge, MapPin, MonitorPlay, Timer } from "lucide-react";
 
-import type { Course } from "@/types/domain";
+import type { CatalogueCourse } from "@/types/catalogue";
+
 import { formatClassTime, formatDate, formatDuration } from "@/lib/domain/format";
 
 import { LEVEL_LABEL, MODE_LABEL } from "./courseLabels";
 
 /** Definition list of the practical details of a course. */
-export function CourseFacts({ course }: { course: Course }): ReactElement {
+export function CourseFacts({ course }: { course: CatalogueCourse }): ReactElement {
   const facts = [
     {
       icon: course.mode === "online" ? MonitorPlay : MapPin,

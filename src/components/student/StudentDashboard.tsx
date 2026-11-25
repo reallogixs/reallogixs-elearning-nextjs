@@ -4,10 +4,10 @@ import type { ReactElement } from "react";
 import { Award, BookOpen, Clock, Search } from "lucide-react";
 
 import { formatClassTime, formatDate } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
-import { byNewest, courseById, ordersForStudent } from "@/lib/store/selectors";
-import { useStudent } from "@/lib/store/useRoleUser";
+import { byNewest, courseById, ordersForStudent } from "@/lib/portal/selectors";
+import { useStudent } from "@/lib/account/useRoleUser";
 import { useNow } from "@/lib/useNow";
+import { usePortalData } from "@/components/data/PortalData";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -18,7 +18,7 @@ import { EnrolmentCard } from "./EnrolmentCard";
 const DAY = 86_400_000;
 
 export function StudentDashboard(): ReactElement | null {
-  const db = useDb();
+  const db = usePortalData();
   const student = useStudent();
   const now = useNow().getTime();
   if (!student) return null;

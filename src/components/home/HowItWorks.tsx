@@ -2,14 +2,15 @@
 
 import type { ReactElement } from "react";
 
-import { useDb } from "@/lib/store/hooks";
+import { useContent } from "@/components/data/SiteData";
 import { Reveal } from "@/components/motion/Reveal";
 import { Section } from "@/components/ui/Section";
 
 import { ContentHeading } from "./ContentHeading";
 
-export function HowItWorks(): ReactElement {
-  const { steps, sections } = useDb().content;
+export function HowItWorks(): ReactElement | null {
+  const { steps, sections } = useContent();
+  if (steps.length === 0) return null;
   return (
     <Section id="how-it-works" tone="mesh" labelledBy="how-title">
       <div aria-hidden="true" className="absolute inset-0 bg-grid-dark" />

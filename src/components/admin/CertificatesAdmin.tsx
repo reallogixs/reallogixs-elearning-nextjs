@@ -3,20 +3,20 @@
 import type { ReactElement } from "react";
 import { Send } from "lucide-react";
 
-import { meetingsApi } from "@/lib/api";
 import { formatDate } from "@/lib/domain/format";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
+import { usePortalData } from "@/components/data/PortalData";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { IconButton } from "@/components/ui/IconButton";
+import { resendCertificate, setCertificateRevoked } from "@/server/actions/certificates";
 
 /** Certificates are only created by completing a class, so attendance can't be bypassed. */
 export function CertificatesAdmin(): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   const { run, pending } = useAction();
 
   return (
@@ -79,8 +79,8 @@ export function CertificatesAdmin(): ReactElement {
                   onClick={() =>
                     run(
                       `send-${row.id}`,
-                      () => meetingsApi.resendCertificate(row.id),
-                      "Certificate emailed again (see Outbox).",
+                      () => resendCertificate({ id: row.id }),
+                      "Certificate emailed again.",
                     )
                   }
                 >
@@ -101,7 +101,7 @@ export function CertificatesAdmin(): ReactElement {
                   onClick={() =>
                     run(
                       row.id,
-                      () => meetingsApi.setCertificateRevoked(row.id, !row.revokedAt),
+                      () => setCertificateRevoked({ id: row.id, revoked: !row.revokedAt }),
                       row.revokedAt ? "Certificate restored." : "Certificate revoked.",
                     )
                   }

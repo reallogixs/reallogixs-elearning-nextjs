@@ -4,22 +4,21 @@ import { useState, type ReactElement } from "react";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 
-import { catalogueApi } from "@/lib/api";
+import type { Catalogue } from "@/types/catalogue";
 import { formatDateTime, formatPKR } from "@/lib/domain/format";
-import { seatsTaken } from "@/lib/domain/orders";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
-import { categoryById, instructorById } from "@/lib/store/selectors";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable } from "@/components/ui/DataTable";
 import { IconButton } from "@/components/ui/IconButton";
+import { useToast } from "@/components/ui/Toast";
+import { removeCourse, setEnrolmentOpen } from "@/server/actions/catalogue";
 
-export function CoursesAdmin(): ReactElement {
-  const db = useDb();
+export function CoursesAdmin({ courses, categories, instructors }: Catalogue): ReactElement {
   const { run, pending } = useAction();
+  const { notify } = useToast();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   return (
@@ -35,7 +34,7 @@ export function CoursesAdmin(): ReactElement {
       />
       <DataTable
         caption="Courses"
-        rows={db.courses}
+        rows={courses}
         rowKey={(course) => course.id}
         columns={[
           {
@@ -51,8 +50,8 @@ export function CoursesAdmin(): ReactElement {
                   {course.title}
                 </Link>
                 <span className="text-ink-soft">
-                  {categoryById(db, course.categoryId)?.name} ·{" "}
-                  {instructorById(db, course.instructorId)?.name}
+                  {categories.find((item) => item.id === course.categoryId)?.name} ·{" "}
+                  {instructors.find((item) => item.id === course.instructorId)?.name}
                 </span>
               </div>
             ),
@@ -73,7 +72,7 @@ export function CoursesAdmin(): ReactElement {
           {
             key: "seats",
             header: "Seats",
-            cell: (course) => `${seatsTaken(db.orders, course.id)}/${course.seats}`,
+            cell: (course) => `${course.seatsTaken}/${course.seats}`,
           },
           {
             key: "price",
@@ -106,7 +105,7 @@ export function CoursesAdmin(): ReactElement {
                   onClick={() =>
                     run(
                       course.id,
-                      () => catalogueApi.setEnrolmentOpen(course.id, !course.enrolmentOpen),
+                      () => setEnrolmentOpen({ id: course.id, open: !course.enrolmentOpen }),
                       course.enrolmentOpen ? "Enrolment closed." : "Enrolment opened.",
                     )
                   }
@@ -131,14 +130,15 @@ export function CoursesAdmin(): ReactElement {
       <ConfirmDialog
         open={Boolean(deleteId)}
         title="Delete course?"
-        body="This can't be undone. Courses with enrolments can't be deleted; set them to Draft instead."
+        body="A course with past orders is archived instead, so its history is kept. A class students have paid for can't be removed until it is completed."
         confirmLabel="Delete"
         danger
         loading={pending === "delete"}
         onClose={() => setDeleteId(null)}
         onConfirm={async () => {
           if (!deleteId) return;
-          await run("delete", () => catalogueApi.deleteCourse(deleteId), "Course deleted.");
+          const result = await run("delete", () => removeCourse({ id: deleteId }));
+          if (result.ok) notify(result.data.notice);
           setDeleteId(null);
         }}
       />

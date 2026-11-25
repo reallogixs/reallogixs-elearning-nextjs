@@ -5,8 +5,8 @@ import { ShoppingBag } from "lucide-react";
 
 import type { Order } from "@/types/domain";
 import { formatDate, formatPKR } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
-import { courseById, paymentMethodById } from "@/lib/store/selectors";
+import { courseById, paymentMethodById } from "@/lib/portal/selectors";
+import { usePortalData } from "@/components/data/PortalData";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { DataTable } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -20,7 +20,7 @@ export function OrdersTable({
   onOpen: (id: string) => void;
   caption: string;
 }): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   return (
     <DataTable
       caption={caption}

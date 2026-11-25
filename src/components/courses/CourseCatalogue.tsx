@@ -6,8 +6,7 @@ import { Search, SearchX } from "lucide-react";
 
 import type { CourseMode } from "@/types/domain";
 import { buildCategoryTree, descendantIds } from "@/lib/domain/categories";
-import { useDb } from "@/lib/store/hooks";
-import { publishedCourses } from "@/lib/store/selectors";
+import { useCatalogue } from "@/components/data/SiteData";
 import { Button } from "@/components/ui/Button";
 import { ChipGroup } from "@/components/ui/ChipGroup";
 import { Drawer } from "@/components/ui/Drawer";
@@ -30,7 +29,7 @@ const MODE_OPTIONS: { value: ModeFilter; label: string }[] = [
 
 /** Catalogue with filters: a sidebar on desktop, a drawer on phones and tablets. */
 export function CourseCatalogue(): ReactElement {
-  const db = useDb();
+  const { courses, categories } = useCatalogue();
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -39,22 +38,21 @@ export function CourseCatalogue(): ReactElement {
   const [query, setQuery] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const courses = publishedCourses(db);
-  const tree = useMemo(() => buildCategoryTree(db.categories), [db.categories]);
-  const activeCategory = db.categories.find((category) => category.slug === activeSlug);
+  const tree = useMemo(() => buildCategoryTree(categories), [categories]);
+  const activeCategory = categories.find((category) => category.slug === activeSlug);
 
   /** Course count per category, including everything nested under it. */
   const counts = useMemo(() => {
     const map = new Map<string, number>();
-    for (const category of db.categories) {
-      const ids = descendantIds(db.categories, category.id);
+    for (const category of categories) {
+      const ids = descendantIds(categories, category.id);
       map.set(category.id, courses.filter((course) => ids.has(course.categoryId)).length);
     }
     return map;
-  }, [db.categories, courses]);
+  }, [categories, courses]);
 
   const visible = useMemo(() => {
-    const allowed = activeCategory ? descendantIds(db.categories, activeCategory.id) : null;
+    const allowed = activeCategory ? descendantIds(categories, activeCategory.id) : null;
     const needle = query.trim().toLowerCase();
     return courses.filter(
       (course) =>
@@ -62,7 +60,7 @@ export function CourseCatalogue(): ReactElement {
         (mode === "all" || course.mode === mode) &&
         (!needle || `${course.title} ${course.summary}`.toLowerCase().includes(needle)),
     );
-  }, [courses, db.categories, activeCategory, mode, query]);
+  }, [courses, categories, activeCategory, mode, query]);
 
   const activeCount = (activeCategory ? 1 : 0) + (mode === "all" ? 0 : 1);
 

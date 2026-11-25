@@ -33,6 +33,12 @@ export const percentSchema = yup
   .min(0, "Can't be below 0.")
   .max(100, "Can't be above 100.");
 
+/** Any UUID version. Yup's own rule rejects version 7, which our database uses. */
+export const uuidSchema = yup.string().matches(/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i, {
+  message: "That record id isn't valid.",
+  excludeEmptyString: true,
+});
+
 export const slugSchema = yup
   .string()
   .trim()

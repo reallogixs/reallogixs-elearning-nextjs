@@ -3,13 +3,12 @@
 import type {
   Category,
   Course,
-  Database,
+  SeedData,
   Instructor,
   Meeting,
   Order,
   PaymentMethod,
   Receipt,
-  User,
 } from "@/types/domain";
 
 import { siteContent } from "./content";
@@ -20,7 +19,6 @@ import { mockReceiptUrl } from "./receipts";
 export { mockReceiptUrl };
 
 /** Bump when the data shape changes, and add an upgrade step in `lib/store/upgrade.ts`. */
-export const DB_VERSION = 3;
 
 const categories: Category[] = [
   {
@@ -411,7 +409,7 @@ const paymentMethods: PaymentMethod[] = [
   },
 ];
 
-const users: User[] = [
+const users: SeedData["users"] = [
   {
     id: "usr_admin",
     role: "admin",
@@ -644,10 +642,9 @@ function seedMeetings(allOrders: Order[]): Meeting[] {
   });
 }
 
-export function createSeed(): Database {
+export function createSeed(): SeedData {
   const allOrders = [...orders, ...generateHistory(new Date("2026-11-20T09:00:00.000Z"))];
   return {
-    version: DB_VERSION,
     categories,
     instructors,
     courses,
@@ -677,14 +674,6 @@ export function createSeed(): Database {
         revokedAt: null,
       },
     ],
-    outbox: [],
     content: siteContent,
   };
 }
-
-/** Shown on the login page so anyone can try each portal. */
-export const DEMO_ACCOUNTS = [
-  { role: "admin", label: "Admin", email: "admin@reallogixs.com", password: "admin123" },
-  { role: "teacher", label: "Teacher", email: "sana@example.com", password: "teacher123" },
-  { role: "student", label: "Student", email: "ali@example.com", password: "student123" },
-] as const;

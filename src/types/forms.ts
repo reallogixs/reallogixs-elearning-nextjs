@@ -1,2 +1,2 @@
-/** Result shape every mock API mutation returns (mirrors the future server actions). */
+/** Result shape every server action returns. */
 export type Result<T = void> = { ok: true; data: T } | { ok: false; error: string };

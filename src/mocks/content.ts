@@ -61,20 +61,19 @@ export const siteContent: SiteContent = {
     track: {
       label: "Track enrolment",
       title: "Where's my enrolment?",
-      body: "Enter the order number from checkout and the phone number you used. Demo: try RLX-9GUEST with 0344 1112233.",
+      body: "Enter the order number from checkout and the phone number you used.",
     },
     verify: {
       label: "Verify certificate",
       title: "Is this certificate genuine?",
-      body: "Enter the code printed on a Reallogixs certificate to see who it was issued to. Demo: try CERT-DEMO2026.",
+      body: "Enter the code printed on a Reallogixs certificate to see who it was issued to.",
     },
     login: {
       label: "Welcome back",
       title: "Log in",
-      body: "Students, teachers and admins all log in here. Teacher accounts are created by the Reallogixs team.",
-      asideTitle: "One login, three portals.",
-      asideBody:
-        "Students see their courses and receipts. Teachers see referrals and earnings. Admins run the academy.",
+      body: "See your classes, payments and certificates.",
+      asideTitle: "Everything you're learning, in one place.",
+      asideBody: "Open your class link, send a new receipt, and download certificates any time.",
     },
     signup: {
       label: "Student account",

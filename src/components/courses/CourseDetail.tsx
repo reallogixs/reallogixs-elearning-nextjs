@@ -3,44 +3,35 @@
 import type { ReactElement } from "react";
 import { CircleCheck, Users } from "lucide-react";
 
+import type { CatalogueCourse } from "@/types/catalogue";
+import type { Course } from "@/types/domain";
+import { courseEnrolment, courseSeatsLeft } from "@/lib/domain/catalogue";
 import { categoryTrail } from "@/lib/domain/categories";
 import { formatPKR } from "@/lib/domain/format";
-import { ENROLMENT_LABEL, enrolmentState, seatsLeft } from "@/lib/domain/orders";
-import { useDb, useHydrated } from "@/lib/store/hooks";
-import { courseBySlug, instructorById } from "@/lib/store/selectors";
+import { ENROLMENT_LABEL } from "@/lib/domain/orders";
+import { useCatalogue, useContent } from "@/components/data/SiteData";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Button } from "@/components/ui/Button";
 import { MobileActionBar } from "@/components/ui/MobileActionBar";
-import { NotFoundState } from "@/components/ui/NotFoundState";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { Skeleton } from "@/components/ui/Skeleton";
 
 import { CourseFacts } from "./CourseFacts";
 import { EnrolmentBadge } from "./EnrolmentBadge";
 import { InstructorCard } from "./InstructorCard";
 import { MODE_LABEL } from "./courseLabels";
 
-export function CourseDetail({ slug }: { slug: string }): ReactElement {
-  const db = useDb();
-  const hydrated = useHydrated();
-  const course = courseBySlug(db, slug);
+interface CourseDetailProps {
+  course: CatalogueCourse;
+  text: Pick<Course, "description" | "outcomes">;
+}
 
-  if (!course || course.status !== "published") {
-    if (!hydrated) return <Skeleton className="shell my-16 h-96" />;
-    return (
-      <NotFoundState
-        title="Course not found"
-        body="This course may have been removed or isn't published yet."
-        href="/courses"
-        cta="See all courses"
-      />
-    );
-  }
-
-  const instructor = instructorById(db, course.instructorId);
-  const trail = categoryTrail(db.categories, course.categoryId);
-  const state = enrolmentState(course, db.orders);
-  const left = seatsLeft(course, db.orders);
+export function CourseDetail({ course, text }: CourseDetailProps): ReactElement {
+  const { coursePage } = useContent();
+  const { instructors, categories } = useCatalogue();
+  const instructor = instructors.find((item) => item.id === course.instructorId);
+  const trail = categoryTrail(categories, course.categoryId);
+  const state = courseEnrolment(course);
+  const left = courseSeatsLeft(course);
 
   return (
     <>
@@ -67,13 +58,13 @@ export function CourseDetail({ slug }: { slug: string }): ReactElement {
       <section className="shell grid gap-12 py-12 lg:grid-cols-[1fr_380px] lg:py-16">
         <div className="flex flex-col gap-12">
           <div className="flex flex-col gap-4">
-            <SectionLabel>{db.content.coursePage.aboutLabel}</SectionLabel>
-            <p className="text-body-lg">{course.description}</p>
+            <SectionLabel>{coursePage.aboutLabel}</SectionLabel>
+            <p className="text-body-lg">{text.description}</p>
           </div>
           <div className="flex flex-col gap-4">
-            <SectionLabel>{db.content.coursePage.outcomesLabel}</SectionLabel>
+            <SectionLabel>{coursePage.outcomesLabel}</SectionLabel>
             <ul className="grid gap-3 sm:grid-cols-2">
-              {course.outcomes.map((outcome) => (
+              {text.outcomes.map((outcome) => (
                 <li key={outcome} className="flex gap-3 rounded-md bg-mist p-4">
                   <CircleCheck
                     aria-hidden="true"
@@ -86,7 +77,7 @@ export function CourseDetail({ slug }: { slug: string }): ReactElement {
           </div>
           {instructor ? (
             <div className="flex flex-col gap-4">
-              <SectionLabel>{db.content.coursePage.instructorLabel}</SectionLabel>
+              <SectionLabel>{coursePage.instructorLabel}</SectionLabel>
               <InstructorCard instructor={instructor} />
             </div>
           ) : null}
@@ -116,7 +107,7 @@ export function CourseDetail({ slug }: { slug: string }): ReactElement {
                 {ENROLMENT_LABEL[state]}
               </Button>
             )}
-            <p className="text-small text-ink-soft">{db.content.coursePage.enrolNote}</p>
+            <p className="text-small text-ink-soft">{coursePage.enrolNote}</p>
             <CourseFacts course={course} />
           </div>
         </aside>

@@ -5,9 +5,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Form, Formik } from "formik";
 
 import type { Instructor } from "@/types/domain";
-import { catalogueApi } from "@/lib/api";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
 import { instructorSchema, type InstructorFormValues } from "@/lib/validation/admin";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { InstructorCard } from "@/components/courses/InstructorCard";
@@ -15,8 +13,10 @@ import { SubmitButton } from "@/components/form/SubmitButton";
 import { TextField } from "@/components/form/TextField";
 import { TextareaField } from "@/components/form/TextareaField";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { IconButton } from "@/components/ui/IconButton";
 import { Modal } from "@/components/ui/Modal";
+import { removeInstructor, saveInstructor } from "@/server/actions/catalogue";
 
 type Draft = { instructor?: Instructor } | null;
 
@@ -40,7 +40,7 @@ function InstructorForm({
       onSubmit={async (values) => {
         const result = await run(
           "save",
-          () => catalogueApi.saveInstructor(instructorSchema.cast(values), instructor?.id),
+          () => saveInstructor({ ...instructorSchema.cast(values), id: instructor?.id ?? "" }),
           "Instructor saved.",
         );
         if (result.ok) onDone();
@@ -62,10 +62,10 @@ function InstructorForm({
 }
 
 /** Instructors are names shown on courses; they don't log in. */
-export function InstructorsAdmin(): ReactElement {
-  const db = useDb();
-  const { run } = useAction();
+export function InstructorsAdmin({ instructors }: { instructors: Instructor[] }): ReactElement {
+  const { run, pending } = useAction();
   const [draft, setDraft] = useState<Draft>(null);
+  const [deleting, setDeleting] = useState<Instructor | null>(null);
   return (
     <>
       <PageHeader
@@ -78,7 +78,7 @@ export function InstructorsAdmin(): ReactElement {
         }
       />
       <div className="grid gap-4 md:grid-cols-2">
-        {db.instructors.map((instructor) => (
+        {instructors.map((instructor) => (
           <div key={instructor.id} className="relative bg-white">
             <InstructorCard instructor={instructor} />
             <div className="absolute top-2 right-2 flex">
@@ -90,13 +90,7 @@ export function InstructorsAdmin(): ReactElement {
               </IconButton>
               <IconButton
                 label={`Delete ${instructor.name}`}
-                onClick={() =>
-                  run(
-                    "delete",
-                    () => catalogueApi.deleteInstructor(instructor.id),
-                    "Instructor removed.",
-                  )
-                }
+                onClick={() => setDeleting(instructor)}
               >
                 <Trash2 className="size-4 text-error-text" />
               </IconButton>
@@ -117,6 +111,20 @@ export function InstructorsAdmin(): ReactElement {
           />
         ) : null}
       </Modal>
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        title={`Delete ${deleting?.name ?? "instructor"}?`}
+        body="Only instructors with no courses can be deleted."
+        confirmLabel="Delete"
+        danger
+        loading={pending === "delete"}
+        onClose={() => setDeleting(null)}
+        onConfirm={async () => {
+          if (!deleting) return;
+          await run("delete", () => removeInstructor({ id: deleting.id }), "Instructor removed.");
+          setDeleting(null);
+        }}
+      />
     </>
   );
 }

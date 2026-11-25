@@ -3,20 +3,22 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import Link from "next/link";
 
-import type { StudentUser } from "@/types/domain";
-import { ordersApi } from "@/lib/api";
-import type { PromoPreview } from "@/lib/api/orders";
-import { enrolmentState } from "@/lib/domain/orders";
-import { findTeacherByCode, priceFor } from "@/lib/domain/pricing";
-import { useCurrentUser, useDb, useHydrated } from "@/lib/store/hooks";
-import { courseBySlug, enabledPaymentMethods, teachers } from "@/lib/store/selectors";
+import type { CatalogueCourse } from "@/types/catalogue";
+import type { PaymentMethod } from "@/types/domain";
+import type { OrderResult, PromoPreview } from "@/types/portal";
+import { useAccountLoaded } from "@/lib/account/accountStore";
+import { courseEnrolment } from "@/lib/domain/catalogue";
+import { priceFor } from "@/lib/domain/pricing";
+import { useCurrentUser } from "@/lib/account/useCurrentUser";
 import type { ContactInput } from "@/lib/validation/checkout";
+import { PortalDataProvider } from "@/components/data/PortalData";
+import { useContent } from "@/components/data/SiteData";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { NotFoundState } from "@/components/ui/NotFoundState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { OrderStatusPanel } from "@/components/orders/OrderStatusPanel";
 import { ReceiptForm } from "@/components/orders/ReceiptForm";
+import { placeOrder } from "@/server/actions/checkout";
 
 import { DetailsStep } from "./DetailsStep";
 import { PaymentStep } from "./PaymentStep";
@@ -27,39 +29,32 @@ import { StepIndicator } from "./StepIndicator";
 
 const STEPS = ["Your details", "Payment", "Upload receipt"];
 
-export function CheckoutFlow({ slug }: { slug: string }): ReactElement {
-  const db = useDb();
-  const hydrated = useHydrated();
+interface CheckoutFlowProps {
+  course: CatalogueCourse;
+  methods: PaymentMethod[];
+}
+
+export function CheckoutFlow({ course, methods }: CheckoutFlowProps): ReactElement {
+  const { checkout } = useContent();
+  const accountLoaded = useAccountLoaded();
   const user = useCurrentUser();
-  const student = user?.role === "student" ? (user as StudentUser) : null;
-  const course = courseBySlug(db, slug);
-  const methods = enabledPaymentMethods(db);
+  const student = user?.role === "student" ? user : null;
 
   const [step, setStep] = useState(0);
   const [contact, setContact] = useState<ContactInput | null>(null);
   const [promo, setPromo] = useState<PromoPreview | null>(null);
   const [methodId, setMethodId] = useState<string | null>(null);
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const [placed, setPlaced] = useState<OrderResult | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   // Move focus to the new step's heading so keyboard and screen-reader users follow along.
   useEffect(() => {
-    if (step > 0 || orderId) headingRef.current?.focus();
-  }, [step, orderId]);
+    if (step > 0 || placed) headingRef.current?.focus();
+  }, [step, placed]);
 
-  if (!hydrated) return <Skeleton className="shell my-16 h-[32rem]" />;
-  if (!course || course.status !== "published") {
-    return (
-      <NotFoundState
-        title="Course not found"
-        body="This course isn't available for enrolment."
-        href="/courses"
-        cta="See all courses"
-      />
-    );
-  }
+  if (!accountLoaded) return <Skeleton className="shell my-16 h-[32rem]" />;
 
-  if (orderId) {
+  if (placed) {
     return (
       <div className="shell flex max-w-3xl flex-col gap-6 py-12 lg:py-16">
         <h1 ref={headingRef} tabIndex={-1} className="text-h2 outline-none">
@@ -75,7 +70,9 @@ export function CheckoutFlow({ slug }: { slug: string }): ReactElement {
             ? " It's also in your student portal."
             : " Create an account any time to keep all your courses in one place."}
         </p>
-        <OrderStatusPanel orderId={orderId} />
+        <PortalDataProvider data={placed.data}>
+          <OrderStatusPanel orderId={placed.number} />
+        </PortalDataProvider>
         {!student ? (
           <div>
             <Button href="/signup" variant="secondary" size="sm">
@@ -87,9 +84,8 @@ export function CheckoutFlow({ slug }: { slug: string }): ReactElement {
     );
   }
 
-  const state = enrolmentState(course, db.orders);
-  const teacher = promo ? findTeacherByCode(teachers(db), promo.code) : null;
-  const price = priceFor(course, teacher);
+  const open = courseEnrolment(course) === "open" && methods.length > 0;
+  const price = priceFor(course, promo?.discountPct ?? 0);
 
   return (
     <div className="shell grid gap-10 py-12 lg:grid-cols-[1fr_360px] lg:py-16">
@@ -113,7 +109,7 @@ export function CheckoutFlow({ slug }: { slug: string }): ReactElement {
 
         <MobileOrderSummary course={course} price={price} promoCode={promo?.code ?? null} />
 
-        {state !== "open" ? (
+        {!open ? (
           <Alert tone="warning" title="Enrolment unavailable">
             This class isn&apos;t taking enrolments right now.
           </Alert>
@@ -135,11 +131,7 @@ export function CheckoutFlow({ slug }: { slug: string }): ReactElement {
                 }
                 lockEmail={Boolean(student)}
                 promoField={
-                  <PromoCodeField
-                    help={db.content.checkout.promoHelp}
-                    applied={promo}
-                    onApply={setPromo}
-                  />
+                  <PromoCodeField help={checkout.promoHelp} applied={promo} onApply={setPromo} />
                 }
                 onNext={(values) => {
                   setContact(values);
@@ -163,7 +155,7 @@ export function CheckoutFlow({ slug }: { slug: string }): ReactElement {
 
             {step === 2 && contact && methodId ? (
               <ReceiptForm
-                help={db.content.checkout.receiptHelp}
+                help={checkout.receiptHelp}
                 submitLabel="Submit for verification"
                 secondaryAction={
                   <Button variant="ghost" onClick={() => setStep(1)}>
@@ -171,15 +163,15 @@ export function CheckoutFlow({ slug }: { slug: string }): ReactElement {
                   </Button>
                 }
                 onSubmit={async (receipt) => {
-                  const result = await ordersApi.createOrder({
-                    courseId: course.id,
-                    studentId: student?.id ?? null,
+                  const result = await placeOrder({
+                    ...receipt,
                     contact,
-                    promoCode: promo?.code ?? null,
+                    courseId: course.id,
                     paymentMethodId: methodId,
-                    receipt,
+                    promoCode: promo?.code ?? "",
+                    expectedTotal: price.total,
                   });
-                  if (result.ok) setOrderId(result.data.id);
+                  if (result.ok) setPlaced(result.data);
                   return result;
                 }}
               />

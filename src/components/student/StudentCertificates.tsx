@@ -4,16 +4,16 @@ import type { ReactElement } from "react";
 import { Award } from "lucide-react";
 
 import { formatDate } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
-import { ordersForStudent } from "@/lib/store/selectors";
-import { useStudent } from "@/lib/store/useRoleUser";
+import { ordersForStudent } from "@/lib/portal/selectors";
+import { useStudent } from "@/lib/account/useRoleUser";
+import { usePortalData } from "@/components/data/PortalData";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export function StudentCertificates(): ReactElement | null {
-  const db = useDb();
+  const db = usePortalData();
   const student = useStudent();
   if (!student) return null;
   const orderIds = new Set(ordersForStudent(db, student).map((order) => order.id));

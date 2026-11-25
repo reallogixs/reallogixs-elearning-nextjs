@@ -1,16 +1,17 @@
 import type { ReactElement } from "react";
 import { Users } from "lucide-react";
 
-import type { Database, Order } from "@/types/domain";
+import type { Order } from "@/types/domain";
+import type { PortalData } from "@/types/portal";
 import { formatDate, formatPKR } from "@/lib/domain/format";
-import { courseById } from "@/lib/store/selectors";
+import { courseById } from "@/lib/portal/selectors";
 import { UserAvatar } from "@/components/portal/UserAvatar";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { DataTable } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 /** Teachers see the student's name and course only, not their contact details. */
-export function ReferralsTable({ db, orders }: { db: Database; orders: Order[] }): ReactElement {
+export function ReferralsTable({ db, orders }: { db: PortalData; orders: Order[] }): ReactElement {
   return (
     <DataTable
       caption="Students who used your code"

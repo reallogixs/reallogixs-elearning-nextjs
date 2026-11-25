@@ -2,7 +2,7 @@
 
 import type { ReactElement } from "react";
 
-import { useDb } from "@/lib/store/hooks";
+import { useContent } from "@/components/data/SiteData";
 import { Counter } from "@/components/ui/Counter";
 import { Section } from "@/components/ui/Section";
 
@@ -20,8 +20,9 @@ function parseStat(value: string): { number: number; prefix: string; suffix: str
 }
 
 /** Big count-up numbers on white (main site M9). Values are admin-managed. */
-export function StatsSection(): ReactElement {
-  const { stats, sections } = useDb().content;
+export function StatsSection(): ReactElement | null {
+  const { stats, sections } = useContent();
+  if (stats.length === 0) return null;
   return (
     <Section labelledBy="stats-title">
       <ContentHeading id="stats-title" copy={sections.stats} />

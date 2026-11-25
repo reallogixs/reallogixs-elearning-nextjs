@@ -4,11 +4,11 @@ import type { ReactElement } from "react";
 import { BadgePercent, X } from "lucide-react";
 import { Form, Formik } from "formik";
 
-import { ordersApi } from "@/lib/api";
-import type { PromoPreview } from "@/lib/api/orders";
+import type { PromoPreview } from "@/types/portal";
 import { promoCodeSchema } from "@/lib/validation/checkout";
 import { SubmitButton } from "@/components/form/SubmitButton";
 import { TextField } from "@/components/form/TextField";
+import { checkPromoCode } from "@/server/actions/checkout";
 
 interface PromoCodeFieldProps {
   help: string;
@@ -49,7 +49,7 @@ export function PromoCodeField({ help, applied, onApply }: PromoCodeFieldProps):
       validationSchema={promoCodeSchema}
       validateOnBlur={false}
       onSubmit={async (values, { setFieldError }) => {
-        const result = await ordersApi.checkPromoCode(values.code);
+        const result = await checkPromoCode(promoCodeSchema.cast(values));
         if (result.ok) onApply(result.data);
         else setFieldError("code", result.error);
       }}

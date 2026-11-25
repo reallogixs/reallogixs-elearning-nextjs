@@ -2,7 +2,8 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, MapPin, MonitorPlay } from "lucide-react";
 
-import type { Course, Order } from "@/types/domain";
+import type { CatalogueCourse } from "@/types/catalogue";
+import type { Order } from "@/types/domain";
 import { formatDateTime, formatPKR } from "@/lib/domain/format";
 import { MODE_LABEL } from "@/components/courses/courseLabels";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
@@ -16,7 +17,13 @@ const NEXT_ACTION: Record<Order["status"], string> = {
   cancelled: "View order",
 };
 
-export function EnrolmentCard({ order, course }: { order: Order; course?: Course }): ReactElement {
+export function EnrolmentCard({
+  order,
+  course,
+}: {
+  order: Order;
+  course?: CatalogueCourse;
+}): ReactElement {
   const ModeIcon = course?.mode === "physical" ? MapPin : MonitorPlay;
   return (
     <article className="group relative flex flex-col gap-5 rounded-md border border-line/80 bg-white p-5 shadow-soft transition-[border-color,box-shadow] hover:border-sky-300 hover:shadow-card">

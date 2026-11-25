@@ -3,15 +3,15 @@
 import { useState, type CSSProperties, type ReactElement } from "react";
 import { ArrowDown, ArrowUp, FolderPlus, Pencil, Trash2 } from "lucide-react";
 
+import type { CatalogueCourse } from "@/types/catalogue";
 import type { Category } from "@/types/domain";
-import { catalogueApi } from "@/lib/api";
 import { buildCategoryTree, descendantIds, type CategoryNode } from "@/lib/domain/categories";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { IconButton } from "@/components/ui/IconButton";
+import { moveCategory, removeCategory } from "@/server/actions/catalogue";
 
 import { CategoryFormModal, type CategoryDraft } from "./CategoryFormModal";
 
@@ -59,14 +59,14 @@ function CategoryRow({
           <IconButton
             label={`Move ${node.name} up`}
             disabled={index === 0}
-            onClick={() => run("move", () => catalogueApi.moveCategory(node.id, -1))}
+            onClick={() => run("move", () => moveCategory({ id: node.id, direction: -1 }))}
           >
             <ArrowUp className="size-4" />
           </IconButton>
           <IconButton
             label={`Move ${node.name} down`}
             disabled={index === siblings - 1}
-            onClick={() => run("move", () => catalogueApi.moveCategory(node.id, 1))}
+            onClick={() => run("move", () => moveCategory({ id: node.id, direction: 1 }))}
           >
             <ArrowDown className="size-4" />
           </IconButton>
@@ -106,16 +106,20 @@ function CategoryRow({
   );
 }
 
+interface CategoryManagerProps {
+  categories: Category[];
+  courses: Pick<CatalogueCourse, "categoryId">[];
+}
+
 /** Unlimited-depth category tree: add, nest, reorder, rename and delete. */
-export function CategoryManager(): ReactElement {
-  const db = useDb();
+export function CategoryManager({ categories, courses }: CategoryManagerProps): ReactElement {
   const { run, pending } = useAction();
   const [draft, setDraft] = useState<CategoryDraft | null>(null);
   const [deleting, setDeleting] = useState<Category | null>(null);
-  const tree = buildCategoryTree(db.categories);
+  const tree = buildCategoryTree(categories);
   const courseCount = (id: string): number => {
-    const ids = descendantIds(db.categories, id);
-    return db.courses.filter((course) => ids.has(course.categoryId)).length;
+    const ids = descendantIds(categories, id);
+    return courses.filter((course) => ids.has(course.categoryId)).length;
   };
 
   return (
@@ -148,7 +152,7 @@ export function CategoryManager(): ReactElement {
           ))}
         </ul>
       </div>
-      <CategoryFormModal draft={draft} onClose={() => setDraft(null)} />
+      <CategoryFormModal categories={categories} draft={draft} onClose={() => setDraft(null)} />
       <ConfirmDialog
         open={Boolean(deleting)}
         title={`Delete ${deleting?.name ?? "category"}?`}
@@ -159,7 +163,7 @@ export function CategoryManager(): ReactElement {
         onClose={() => setDeleting(null)}
         onConfirm={async () => {
           if (!deleting) return;
-          await run("delete", () => catalogueApi.deleteCategory(deleting.id), "Category deleted.");
+          await run("delete", () => removeCategory({ id: deleting.id }), "Category deleted.");
           setDeleting(null);
         }}
       />

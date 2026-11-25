@@ -2,15 +2,15 @@
 
 import type { ReactElement } from "react";
 
-import { useDb } from "@/lib/store/hooks";
-import { ordersForStudent } from "@/lib/store/selectors";
-import { useStudent } from "@/lib/store/useRoleUser";
+import { ordersForStudent } from "@/lib/portal/selectors";
+import { useStudent } from "@/lib/account/useRoleUser";
+import { usePortalData } from "@/components/data/PortalData";
 import { OrderStatusPanel } from "@/components/orders/OrderStatusPanel";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export function StudentOrder({ orderId }: { orderId: string }): ReactElement | null {
-  const db = useDb();
+  const db = usePortalData();
   const student = useStudent();
   if (!student) return null;
   const owns = ordersForStudent(db, student).some((order) => order.id === orderId);

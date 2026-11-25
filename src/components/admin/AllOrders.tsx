@@ -4,8 +4,8 @@ import { useState, type ReactElement } from "react";
 import { Search } from "lucide-react";
 
 import type { OrderStatus } from "@/types/domain";
-import { useDb } from "@/lib/store/hooks";
-import { byNewest } from "@/lib/store/selectors";
+import { byNewest } from "@/lib/portal/selectors";
+import { usePortalData } from "@/components/data/PortalData";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { ChipGroup } from "@/components/ui/ChipGroup";
@@ -29,7 +29,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 ];
 
 export function AllOrders(): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   const [openId, setOpenId] = useOrderParam();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");

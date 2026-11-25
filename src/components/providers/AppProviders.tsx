@@ -1,11 +1,19 @@
 "use client";
 
-import type { ReactElement, ReactNode } from "react";
+import { Suspense, type ReactElement, type ReactNode } from "react";
 
-import { useStoreHydration } from "@/lib/store/hooks";
+import { useAccountLoad } from "@/lib/account/accountStore";
+import { LoadingBar } from "@/components/ui/LoadingBar";
 import { ToastProvider } from "@/components/ui/Toast";
 
 export function AppProviders({ children }: { children: ReactNode }): ReactElement {
-  useStoreHydration();
-  return <ToastProvider>{children}</ToastProvider>;
+  useAccountLoad();
+  return (
+    <ToastProvider>
+      <Suspense>
+        <LoadingBar />
+      </Suspense>
+      {children}
+    </ToastProvider>
+  );
 }

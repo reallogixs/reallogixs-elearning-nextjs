@@ -1,6 +1,6 @@
 import * as yup from "yup";
 
-import { fileSchema } from "./checkout";
+import { fileSchema, orderNumberSchema } from "./checkout";
 import {
   emailSchema,
   nameSchema,
@@ -8,6 +8,7 @@ import {
   phoneSchema,
   requiredText,
   slugSchema,
+  uuidSchema,
 } from "./shared";
 
 const wholeNumber = (label: string, min: number) =>
@@ -28,8 +29,8 @@ export const courseSchema = yup.object({
     20,
     "Describe the course in a few sentences.",
   ),
-  categoryId: yup.string().required("Choose a category."),
-  instructorId: yup.string().required("Choose an instructor."),
+  categoryId: uuidSchema.required("Choose a category."),
+  instructorId: uuidSchema.required("Choose an instructor."),
   /** Pakistan time, as a datetime-local value: 2026-12-12T20:00 */
   startsAt: yup
     .string()
@@ -53,7 +54,7 @@ export const categorySchema = yup.object({
   name: requiredText("Add a name.").min(2, "Add a name."),
   slug: slugSchema,
   /** "" means top level. Formik sends empty fields as undefined, so default to "". */
-  parentId: yup.string().default(""),
+  parentId: uuidSchema.default(""),
   description: yup.string().trim().max(200, "Keep it under 200 characters.").default(""),
 });
 export type CategoryFormValues = yup.InferType<typeof categorySchema>;
@@ -123,3 +124,29 @@ export const payoutSchema = yup.object({
 });
 
 export const registrantEmailSchema = yup.object({ email: emailSchema });
+
+export const idSchema = yup.object({ id: uuidSchema.required() });
+/** Empty when creating. */
+const optionalId = yup.object({ id: uuidSchema.default("") });
+
+export const saveCourseSchema = courseSchema.concat(optionalId);
+export const setEnrolmentSchema = idSchema.shape({ open: yup.boolean().required() });
+export const saveCategorySchema = categorySchema.concat(optionalId);
+export const moveSchema = idSchema.shape({
+  direction: yup.mixed<-1 | 1>().oneOf([-1, 1]).required(),
+});
+export const saveInstructorSchema = instructorSchema.concat(optionalId);
+export const updateTeacherSchema = teacherSchema.concat(idSchema);
+export const teacherActiveSchema = idSchema.shape({ active: yup.boolean().required() });
+
+export const orderSchema = yup.object({ number: orderNumberSchema });
+export const rejectOrderSchema = orderSchema.concat(rejectSchema);
+export const changeRegistrantSchema = orderSchema.concat(registrantEmailSchema);
+export const payTeacherSchema = payoutSchema.shape({
+  teacherId: uuidSchema.required(),
+  /** What the admin was shown and paid. */
+  expectedAmount: yup.number().required().integer().min(1),
+});
+export const savePaymentMethodSchema = paymentMethodSchema.concat(optionalId);
+export const setMethodEnabledSchema = idSchema.shape({ enabled: yup.boolean().required() });
+export const revokeSchema = idSchema.shape({ revoked: yup.boolean().required() });

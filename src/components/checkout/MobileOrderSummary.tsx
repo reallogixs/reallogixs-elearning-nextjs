@@ -1,13 +1,14 @@
 import type { ReactElement } from "react";
 import { ChevronDown } from "lucide-react";
 
-import type { Course, PriceBreakdown } from "@/types/domain";
+import type { CatalogueCourse } from "@/types/catalogue";
+import type { PriceBreakdown } from "@/types/domain";
 import { formatPKR } from "@/lib/domain/format";
 
 import { PriceSummary } from "./PriceSummary";
 
 interface MobileOrderSummaryProps {
-  course: Course;
+  course: CatalogueCourse;
   price: PriceBreakdown;
   promoCode: string | null;
 }

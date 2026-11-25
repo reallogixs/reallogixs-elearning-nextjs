@@ -10,13 +10,20 @@ Read `README.md` first (flows, structure, demo accounts, backend migration map).
 - **Currency PKR, locale `en-PK`.** Payment methods are Pakistani wallets/banks. (The main site uses AUD.)
 - **Forms: Formik + Yup only.** Every rule lives in a Yup schema in `src/lib/validation/`.
   No hand-written validation (`if (!value) setError…`) in components, and no react-hook-form or zod.
-  The mock API re-runs the same schema with `validateWith()`, as the server will.
-- **Mock backend for now.** All data lives in `localStorage` via `src/lib/store`. Do not add
-  Supabase/Cloudinary/SMTP until asked; the swap points are listed in the README.
+  Server actions re-run the same schema.
+- **All data is in Supabase through Prisma** (`docs/DATABASE_PLAN.md`). Prisma is pinned to 7.10.1.
+- **Database rules.** Structure changes only through migrations; never edit an applied one or use
+  `db push`. New tables must enable row-level security. Server actions use `publicAction` /
+  `roleAction` from `src/server/core/action.ts`; never log personal data or return database errors.
 - **Courses are single online masterclasses** (`startsAt` + `durationMinutes`, Pakistan time). Every
   course has one Zoom meeting, created with it. `lib/domain/meeting.ts` is the only door and
   attendance policy; `lib/zoom/client.ts` is the only file that talks to Zoom (simulated).
   Certificates are created only by `completeClass()`, never by hand.
+- **Three logins** (`lib/account/loginPath.ts`): students at `/login`, teachers at `/teacher/login`, admins at
+  `/admin/login`. Each accepts only its own role. Never link the staff ones from the public site.
+- **Accounts are real** (`src/server/actions/account.ts`). Portal pages and layouts call
+  `requirePortal(role)`; the proxy is only a first check. Forms with passwords or personal data use
+  `method="post"`, so a submit before JavaScript loads can't put them in the address bar.
 - **Lighter motion.** GSAP `Reveal` (fade-up on scroll) for content below the fold. Above the fold
   (hero, page intros) use the CSS `rl-stagger` / `animate-fade-up` entrance so nothing is hidden
   waiting for JS. The home page borrows the main site's signatures: dark `bg-hero-night` hero with the
@@ -38,24 +45,34 @@ Read `README.md` first (flows, structure, demo accounts, backend migration map).
 
 ## 2. Stack
 Next.js 16 App Router · React 19 · TypeScript strict · Tailwind CSS v4 (tokens copied from the
-main site) · GSAP + `@gsap/react` · Formik + Yup · lucide-react · pnpm.
+main site) · GSAP + `@gsap/react` · Formik + Yup · lucide-react ·
+pdf-lib (certificates) · pnpm.
 Ask before adding any other dependency.
 
 ## 3. Code conventions
 - No `any`; explicit return types on exported functions. One component per file, < ~200 lines.
 - `"use client"` only where needed. Pages in `src/app` stay thin and render a component.
 - Colours, sizes and eases come from tokens/Tailwind theme only. Use `cn()` for conditional classes.
-- **Reads** go through `useDb()` + pure selectors (`src/lib/store/selectors.ts`).
-  **Writes** go only through `src/lib/api/*` (async, return `Result`). Components never write to the store.
+- **Reads:** server queries (`src/server/queries`) load data for a viewer; screens read it with
+  `usePortalData()` + pure selectors (`src/lib/portal/selectors.ts`). **Writes** are server actions only.
+- **Loading:** the top `LoadingBar` follows link clicks by itself; call `startLoading(PAGE)` before a
+  `router.push`. `useAction` holds it until fresh data arrives. Portal layouts don't await their data: they
+  pass the promise to `PortalDataProvider`, and `PortalLoading` shows meanwhile. Links to files need
+  `data-file` and `prefetch={false}`.
 - Forms are built from `src/components/form/*` (`TextField`, `SelectField`, `SwitchField`,
   `FileField`, `SubmitButton`, `FormStatus`). API errors go in Formik `status` or `setFieldError`.
 - **All public copy is admin-managed** (`SiteContent` in `types/domain.ts`, edited in Admin → Site
   content). Never hard-code marketing copy in a component: add a field, a default in
   `mocks/content.ts`, a Yup schema in `validation/content.ts` and an editor field. Only interface
-  text (form labels, button states, errors) lives in components. New fields reach saved demo data
-  through `migrate()` in `lib/store/db.ts`.
+  text (form labels, button states, errors) lives in components. New fields fall back to the default
+  until saved.
 - **Yup + Formik:** optional text fields use `.default("")`, never `.defined()`. Formik sends empty
   inputs as `undefined`, so `.defined()` fails on a blank optional field.
+- Site content, categories, instructors and courses come from the database: write through
+  `src/server/actions/`, read through `src/server/queries/`. Public components use `useContent()` and
+  `useCatalogue()`, never the demo store. Orders, payouts and payment methods are in the database too;
+  what each role may see is decided in `server/queries/orderShape.ts`. Never put order data in
+  `localStorage`, and never link to a receipt except through `/api/receipts/[id]`. Check ids with `uuidSchema`, not Yup's `uuid()`.
 - Placeholder data is in `src/mocks/` and marked `PLACEHOLDER` / `isPlaceholder: true`.
 - No `console.log`, no dead code, no commented-out blocks.
 

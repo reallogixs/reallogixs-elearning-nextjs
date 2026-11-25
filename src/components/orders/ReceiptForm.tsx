@@ -4,9 +4,8 @@ import type { ReactElement, ReactNode } from "react";
 import { Form, Formik } from "formik";
 
 import type { Result } from "@/types/forms";
-import type { ReceiptUpload } from "@/lib/api/orders";
-import { readReceiptFile } from "@/lib/files";
-import { receiptSchema } from "@/lib/validation/checkout";
+import { prepareReceipt } from "@/lib/files";
+import { receiptSchema, type ReceiptInput } from "@/lib/validation/checkout";
 import { FileField } from "@/components/form/FileField";
 import { FormStatus } from "@/components/form/FormStatus";
 import { SubmitButton } from "@/components/form/SubmitButton";
@@ -15,7 +14,7 @@ import { TextField } from "@/components/form/TextField";
 interface ReceiptFormProps {
   help: string;
   submitLabel: string;
-  onSubmit: (upload: ReceiptUpload) => Promise<Result<unknown>>;
+  onSubmit: (receipt: ReceiptInput) => Promise<Result<unknown>>;
   /** Extra control on the left of the submit button (e.g. Back). */
   secondaryAction?: ReactNode;
 }
@@ -43,11 +42,12 @@ export function ReceiptForm({
         try {
           // Formik only calls onSubmit once Yup has passed, so cast gives the typed File.
           const { file, transactionRef } = receiptSchema.cast(values);
-          const read = await readReceiptFile(file);
-          const result = await onSubmit({ ...read, transactionRef });
+          const result = await onSubmit({ file: await prepareReceipt(file), transactionRef });
           if (!result.ok) setStatus(result.error);
         } catch {
-          setStatus("We couldn't read that file. Try a different screenshot.");
+          setStatus(
+            "We couldn't send that file. Check your connection, or try a different screenshot.",
+          );
         }
       }}
     >

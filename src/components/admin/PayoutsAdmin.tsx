@@ -5,21 +5,21 @@ import { useState, type ReactElement } from "react";
 import { Form, Formik } from "formik";
 
 import type { TeacherUser } from "@/types/domain";
-import { teachersApi } from "@/lib/api";
 import { formatDate, formatPKR } from "@/lib/domain/format";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
-import { teacherSummary, teachers } from "@/lib/store/selectors";
+import { teacherSummary, teachers } from "@/lib/portal/selectors";
 import { payoutSchema } from "@/lib/validation/admin";
+import { usePortalData } from "@/components/data/PortalData";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { TextField } from "@/components/form/TextField";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
+import { payTeacher } from "@/server/actions/payouts";
 
 export function PayoutsAdmin(): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   const { run, pending } = useAction();
   const [paying, setPaying] = useState<TeacherUser | null>(null);
   const rows = teachers(db).map((teacher) => ({
@@ -32,7 +32,12 @@ export function PayoutsAdmin(): ReactElement {
     if (!paying) return;
     const result = await run(
       "pay",
-      () => teachersApi.payTeacher(paying.id, reference),
+      () =>
+        payTeacher({
+          teacherId: paying.id,
+          reference,
+          expectedAmount: teacherSummary(db, paying.id).due,
+        }),
       "Payout recorded.",
     );
     if (result.ok) setPaying(null);

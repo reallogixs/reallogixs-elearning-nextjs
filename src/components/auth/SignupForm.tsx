@@ -1,51 +1,57 @@
 "use client";
 
-import type { ReactElement } from "react";
-import { useRouter } from "next/navigation";
+import { useState, type ReactElement } from "react";
 import { Form, Formik } from "formik";
 
-import { authApi } from "@/lib/api";
 import { signupSchema, type SignupInput } from "@/lib/validation/auth";
 import { FormStatus } from "@/components/form/FormStatus";
 import { SubmitButton } from "@/components/form/SubmitButton";
 import { TextField } from "@/components/form/TextField";
+import { requestSignup } from "@/server/actions/account";
 
-const initialValues: SignupInput = { name: "", email: "", phone: "", password: "" };
+import { CheckEmail } from "./CheckEmail";
+
+const initialValues: SignupInput = { name: "", email: "", phone: "" };
 
 export function SignupForm(): ReactElement {
-  const router = useRouter();
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  if (sentTo)
+    return (
+      <CheckEmail
+        email={sentTo}
+        body="Open the link in it to choose a password and finish creating your account."
+      />
+    );
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={signupSchema}
       onSubmit={async (values, { setStatus }) => {
-        const result = await authApi.signupStudent(values);
-        if (result.ok) router.push("/student");
+        const result = await requestSignup(values);
+        if (result.ok) setSentTo(values.email);
         else setStatus(result.error);
       }}
     >
-      <Form noValidate className="grid gap-5 sm:grid-cols-2">
+      <Form method="post" noValidate className="grid gap-5 sm:grid-cols-2">
         <TextField
           name="name"
           label="Full name"
           autoComplete="name"
           fieldClassName="sm:col-span-2"
         />
-        <TextField name="email" label="Email" type="email" autoComplete="email" />
+        <TextField
+          name="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          hint="We'll send a link to choose your password."
+        />
         <TextField
           name="phone"
           label="WhatsApp number"
           type="tel"
           autoComplete="tel"
           placeholder="0300 1234567"
-        />
-        <TextField
-          name="password"
-          label="Password"
-          type="password"
-          autoComplete="new-password"
-          hint="At least 8 characters."
-          fieldClassName="sm:col-span-2"
         />
         <FormStatus className="sm:col-span-2" />
         <SubmitButton arrow className="sm:col-span-2 sm:justify-self-start">

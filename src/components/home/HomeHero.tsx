@@ -4,9 +4,9 @@ import type { CSSProperties, ReactElement } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
+import { courseEnrolment } from "@/lib/domain/catalogue";
 import { formatShortDate } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
-import { publishedCourses } from "@/lib/store/selectors";
+import { useCatalogue, useContent } from "@/components/data/SiteData";
 import { Grain } from "@/components/motion/Grain";
 import { Button } from "@/components/ui/Button";
 import { MODE_LABEL } from "@/components/courses/courseLabels";
@@ -21,10 +21,10 @@ function delay(ms: number): CSSProperties {
  * The header turns transparent over it (data-header-tone="dark").
  */
 export function HomeHero(): ReactElement {
-  const db = useDb();
-  const { hero } = db.content;
-  const upcoming = publishedCourses(db)
-    .filter((course) => course.enrolmentOpen)
+  const { hero } = useContent();
+  const { courses } = useCatalogue();
+  const upcoming = courses
+    .filter((course) => courseEnrolment(course) === "open")
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
     .slice(0, 3);
 

@@ -4,9 +4,7 @@ import { useState, type ReactElement } from "react";
 import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
 
 import type { PaymentMethod } from "@/types/domain";
-import { settingsApi } from "@/lib/api";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { PaymentMethodLogo } from "@/components/payments/PaymentMethodLogo";
 import { Button } from "@/components/ui/Button";
@@ -15,16 +13,17 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { IconButton } from "@/components/ui/IconButton";
 import { Modal } from "@/components/ui/Modal";
 import { Switch } from "@/components/ui/Switch";
+import { useToast } from "@/components/ui/Toast";
+import { moveMethod, removePaymentMethod, setMethodEnabled } from "@/server/actions/paymentMethods";
 
 import { PaymentMethodForm } from "./PaymentMethodForm";
 
 /** Admin-managed payment methods: logo, any detail rows, checkout order and visibility. */
-export function PaymentMethodsAdmin(): ReactElement {
-  const db = useDb();
+export function PaymentMethodsAdmin({ methods }: { methods: PaymentMethod[] }): ReactElement {
   const { run, pending } = useAction();
+  const { notify } = useToast();
   const [draft, setDraft] = useState<{ method?: PaymentMethod } | null>(null);
   const [deleting, setDeleting] = useState<PaymentMethod | null>(null);
-  const methods = [...db.paymentMethods].sort((a, b) => a.order - b.order);
 
   return (
     <>
@@ -61,7 +60,7 @@ export function PaymentMethodsAdmin(): ReactElement {
                   onChange={(event) =>
                     run(
                       method.id,
-                      () => settingsApi.setPaymentMethodEnabled(method.id, event.target.checked),
+                      () => setMethodEnabled({ id: method.id, enabled: event.target.checked }),
                       event.target.checked
                         ? `${method.name} shown at checkout.`
                         : `${method.name} hidden.`,
@@ -72,14 +71,14 @@ export function PaymentMethodsAdmin(): ReactElement {
                 <IconButton
                   label={`Move ${method.name} up`}
                   disabled={index === 0}
-                  onClick={() => run("move", () => settingsApi.movePaymentMethod(method.id, -1))}
+                  onClick={() => run("move", () => moveMethod({ id: method.id, direction: -1 }))}
                 >
                   <ArrowUp className="size-4" />
                 </IconButton>
                 <IconButton
                   label={`Move ${method.name} down`}
                   disabled={index === methods.length - 1}
-                  onClick={() => run("move", () => settingsApi.movePaymentMethod(method.id, 1))}
+                  onClick={() => run("move", () => moveMethod({ id: method.id, direction: 1 }))}
                 >
                   <ArrowDown className="size-4" />
                 </IconButton>
@@ -111,18 +110,15 @@ export function PaymentMethodsAdmin(): ReactElement {
       <ConfirmDialog
         open={Boolean(deleting)}
         title={`Delete ${deleting?.name ?? "method"}?`}
-        body="This can't be undone. Methods already used by orders can't be deleted; hide them instead."
+        body="A method that orders were paid with is archived, so their history is kept."
         confirmLabel="Delete"
         danger
         loading={pending === "delete"}
         onClose={() => setDeleting(null)}
         onConfirm={async () => {
           if (!deleting) return;
-          await run(
-            "delete",
-            () => settingsApi.deletePaymentMethod(deleting.id),
-            "Payment method deleted.",
-          );
+          const result = await run("delete", () => removePaymentMethod({ id: deleting.id }));
+          if (result.ok) notify(result.data.notice);
           setDeleting(null);
         }}
       />

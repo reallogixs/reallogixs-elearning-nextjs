@@ -1,7 +1,7 @@
-import type { Database } from "@/types/domain";
+import type { PortalData } from "@/types/portal";
 import { confirmedAt, periodChange, weeklySeries, type SeriesPoint } from "@/lib/domain/analytics";
 import { seatsTaken } from "@/lib/domain/orders";
-import { teacherSummary, teachers } from "@/lib/store/selectors";
+import { teacherSummary, teachers } from "@/lib/portal/selectors";
 
 export const WEEKS = 12;
 
@@ -20,7 +20,7 @@ export interface AdminMetrics {
 }
 
 /** Everything the admin dashboard shows, from one database snapshot. */
-export function adminMetrics(db: Database, now: Date): AdminMetrics {
+export function adminMetrics(db: PortalData, now: Date): AdminMetrics {
   const revenue = weeklySeries(
     db.orders,
     now,

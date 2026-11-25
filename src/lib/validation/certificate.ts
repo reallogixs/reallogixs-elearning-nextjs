@@ -18,3 +18,11 @@ export const joinClassSchema = yup.object({
     .required("Enter your Zoom email.")
     .email("Enter a valid email address."),
 });
+
+/** The action also gets the secret from the personal link. */
+export const joinSchema = joinClassSchema.shape({
+  token: yup
+    .string()
+    .required()
+    .matches(/^[a-z0-9]{10,64}$/),
+});

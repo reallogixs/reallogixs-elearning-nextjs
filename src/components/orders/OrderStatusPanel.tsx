@@ -3,14 +3,15 @@
 import type { ReactElement } from "react";
 
 import type { Order } from "@/types/domain";
-import { ordersApi } from "@/lib/api";
 import { formatPKR } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
-import { courseById, paymentMethodById } from "@/lib/store/selectors";
+import { courseById, paymentMethodById } from "@/lib/portal/selectors";
+import { usePortalData, useUpdatePortalData } from "@/components/data/PortalData";
+import { useContent } from "@/components/data/SiteData";
 import { Alert } from "@/components/ui/Alert";
 import { Card } from "@/components/ui/Card";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { useToast } from "@/components/ui/Toast";
+import { reuploadReceipt } from "@/server/actions/checkout";
 
 import { ClassAccess } from "./ClassAccess";
 import { OrderStatusBadge } from "./OrderStatusBadge";
@@ -20,10 +21,12 @@ import { WhatsAppCta } from "./WhatsAppCta";
 
 /**
  * Everything a student needs about one order: status, next step (re-upload or the
- * WhatsApp link) and history. Reads the live order so admin actions show up instantly.
+ * WhatsApp link) and history. Reads the loaded order, so an update shows at once.
  */
 export function OrderStatusPanel({ orderId }: { orderId: string }): ReactElement | null {
-  const db = useDb();
+  const db = usePortalData();
+  const { checkout, community, contact } = useContent();
+  const update = useUpdatePortalData();
   const { notify } = useToast();
   const order: Order | undefined = db.orders.find((candidate) => candidate.id === orderId);
   if (!order) return null;
@@ -63,14 +66,14 @@ export function OrderStatusPanel({ orderId }: { orderId: string }): ReactElement
 
       {order.status === "pending" ? (
         <Alert tone="info" title="Awaiting verification">
-          {db.content.checkout.pendingMessage}
+          {checkout.pendingMessage}
         </Alert>
       ) : null}
 
       {order.status === "confirmed" ? (
         <>
           <ClassAccess order={order} />
-          <WhatsAppCta community={db.content.community} />
+          <WhatsAppCta community={community} />
         </>
       ) : null}
 
@@ -80,11 +83,18 @@ export function OrderStatusPanel({ orderId }: { orderId: string }): ReactElement
             {order.rejectionReason}
           </Alert>
           <ReceiptForm
-            help={db.content.checkout.receiptHelp}
+            help={checkout.receiptHelp}
             submitLabel="Upload new receipt"
-            onSubmit={async (upload) => {
-              const result = await ordersApi.reuploadReceipt(order.id, upload);
-              if (result.ok) notify("New receipt sent for verification.");
+            onSubmit={async (receipt) => {
+              const result = await reuploadReceipt({
+                ...receipt,
+                orderId: order.id,
+                phone: order.contact.phone,
+              });
+              if (result.ok) {
+                update(result.data.data);
+                notify("New receipt sent for verification.");
+              }
               return result;
             }}
           />
@@ -93,7 +103,7 @@ export function OrderStatusPanel({ orderId }: { orderId: string }): ReactElement
 
       {order.status === "cancelled" ? (
         <Alert tone="warning" title="This order was cancelled">
-          Contact us at {db.content.contact.email} if you think this is a mistake.
+          Contact us at {contact.email} if you think this is a mistake.
         </Alert>
       ) : null}
 

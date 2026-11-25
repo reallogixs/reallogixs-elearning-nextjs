@@ -1,14 +1,9 @@
-import type { Meeting, Order, Registrant } from "@/types/domain";
+import type { Meeting, MeetingStatus, Order, OrderStatus } from "@/types/domain";
 
-/** Why someone can't enter, or the registrant who can. The single door policy for a class. */
-export type Admission =
-  | { allowed: true; registrant: Registrant }
-  | {
-      allowed: false;
-      reason: "invalid_link" | "not_paid" | "wrong_email" | "not_started" | "ended";
-    };
+/** Why someone can't enter. The single door policy for a class. */
+export type Refusal = "invalid_link" | "not_paid" | "wrong_email" | "not_started" | "ended";
 
-export const ADMISSION_MESSAGE: Record<Extract<Admission, { allowed: false }>["reason"], string> = {
+export const ADMISSION_MESSAGE: Record<Refusal, string> = {
   invalid_link: "This join link isn't valid. Use the latest link from your email or order page.",
   not_paid: "This link belongs to an enrolment that isn't paid and confirmed.",
   wrong_email:
@@ -18,24 +13,17 @@ export const ADMISSION_MESSAGE: Record<Extract<Admission, { allowed: false }>["r
 };
 
 /**
- * Only a registered student, with a confirmed order, signed in with the registered
- * email, while the host has the meeting running.
+ * Only a registered student, with a confirmed order, signed in with the registered email, while
+ * the host has the meeting running. Null means they can come in.
  */
-export function admit(
-  meeting: Meeting | undefined,
-  orders: Order[],
-  token: string,
+export function refusal(
+  registrant: { email: string; orderStatus: OrderStatus; meetingStatus: MeetingStatus },
   email: string,
-): Admission {
-  const registrant = meeting?.registrants.find((candidate) => candidate.joinToken === token);
-  if (!meeting || !registrant) return { allowed: false, reason: "invalid_link" };
-  const order = orders.find((candidate) => candidate.id === registrant.orderId);
-  if (order?.status !== "confirmed") return { allowed: false, reason: "not_paid" };
-  if (registrant.email.toLowerCase() !== email.trim().toLowerCase())
-    return { allowed: false, reason: "wrong_email" };
-  if (meeting.status === "ended") return { allowed: false, reason: "ended" };
-  if (meeting.status === "scheduled") return { allowed: false, reason: "not_started" };
-  return { allowed: true, registrant };
+): Refusal | null {
+  if (registrant.orderStatus !== "confirmed") return "not_paid";
+  if (registrant.email !== email.trim().toLowerCase()) return "wrong_email";
+  if (registrant.meetingStatus === "ended") return "ended";
+  return registrant.meetingStatus === "scheduled" ? "not_started" : null;
 }
 
 /** True if the student was in the meeting at any moment after the host started it. */
@@ -64,18 +52,6 @@ export function eligibleOrders(meeting: Meeting, orders: Order[]): Order[] {
       registered.has(order.id) &&
       attended(meeting, order.id),
   );
-}
-
-/** Closes every open stay, e.g. when the host ends the meeting. */
-export function closeSessions(meeting: Meeting, at: string, orderId?: string): Meeting {
-  return {
-    ...meeting,
-    attendance: meeting.attendance.map((session) =>
-      session.leftAt === null && (!orderId || session.orderId === orderId)
-        ? { ...session, leftAt: at }
-        : session,
-    ),
-  };
 }
 
 export function emptyMeeting(courseId: string, zoomId: string): Meeting {

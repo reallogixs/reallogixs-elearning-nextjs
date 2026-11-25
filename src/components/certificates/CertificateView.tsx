@@ -1,49 +1,34 @@
 "use client";
 
 import type { ReactElement } from "react";
-import { Printer } from "lucide-react";
+import { Download, Printer } from "lucide-react";
 
+import type { Certificate } from "@/types/domain";
 import { formatDate } from "@/lib/domain/format";
-import { useDb, useHydrated } from "@/lib/store/hooks";
 import { Logo } from "@/components/brand/Logo";
 import { CircuitLine } from "@/components/brand/CircuitLine";
 import { Button } from "@/components/ui/Button";
-import { NotFoundState } from "@/components/ui/NotFoundState";
-import { Skeleton } from "@/components/ui/Skeleton";
 
-/** Printable certificate; the URL doubles as the public verification link. */
-export function CertificateView({ code }: { code: string }): ReactElement {
-  const db = useDb();
-  const hydrated = useHydrated();
-  const certificate = db.certificates.find((candidate) => candidate.code === code.toUpperCase());
-
-  if (certificate?.revokedAt)
-    return (
-      <NotFoundState
-        title="Certificate revoked"
-        body="Reallogixs issued this certificate, but it is no longer valid."
-        href="/verify"
-        cta="Verify another"
-      />
-    );
-
-  if (!certificate) {
-    if (!hydrated) return <Skeleton className="m-8 h-96" />;
-    return (
-      <NotFoundState
-        title="Certificate not found"
-        body="Check the verification code and try again."
-        href="/verify"
-        cta="Verify a code"
-      />
-    );
-  }
-
+export function CertificateView({ certificate }: { certificate: Certificate }): ReactElement {
   return (
     <div className="flex min-h-dvh flex-col items-center gap-6 bg-mist p-4 py-10 print:bg-white print:p-0">
-      <div data-print-hide className="flex gap-3">
-        <Button size="sm" icon={<Printer className="size-4" />} onClick={() => window.print()}>
-          Print or save as PDF
+      <div data-print-hide className="flex flex-wrap justify-center gap-3">
+        <Button
+          size="sm"
+          icon={<Download className="size-4" />}
+          href={`/certificates/${certificate.code}/pdf`}
+          prefetch={false}
+          data-file
+        >
+          Download PDF
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          icon={<Printer className="size-4" />}
+          onClick={() => window.print()}
+        >
+          Print
         </Button>
         <Button size="sm" variant="secondary" href={`/verify?code=${certificate.code}`}>
           Verify

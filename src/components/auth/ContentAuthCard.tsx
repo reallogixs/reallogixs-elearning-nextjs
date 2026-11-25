@@ -3,9 +3,8 @@
 import type { ReactElement, ReactNode } from "react";
 import Link from "next/link";
 
-import { useDb } from "@/lib/store/hooks";
-
 import { AuthCard } from "./AuthCard";
+import { useContent } from "@/components/data/SiteData";
 
 const SWITCH = {
   login: { prompt: "New student?", href: "/signup", label: "Create an account" },
@@ -20,7 +19,7 @@ export function ContentAuthCard({
   page: "login" | "signup";
   children: ReactNode;
 }): ReactElement {
-  const copy = useDb().content.pages[page];
+  const copy = useContent().pages[page];
   const other = SWITCH[page];
   return (
     <AuthCard

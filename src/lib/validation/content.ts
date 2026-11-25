@@ -113,3 +113,17 @@ export const faqsSchema = yup.object({
     )
     .required(),
 });
+
+export const contentBlockSchema = yup.object({
+  key: yup.string().required(),
+  /** Checked again with the block's own schema. */
+  value: yup.mixed<object>().required(),
+});
+
+export const contentListSchema = yup.object({
+  list: yup
+    .mixed<"faqs" | "testimonials" | "steps" | "stats">()
+    .oneOf(["faqs", "testimonials", "steps", "stats"])
+    .required(),
+  items: yup.array(yup.mixed<object>().required()).max(50, "That's too many items.").required(),
+});

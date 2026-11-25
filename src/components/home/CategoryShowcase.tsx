@@ -14,8 +14,7 @@ import {
 
 import { cn } from "@/lib/cn";
 import { buildCategoryTree, descendantIds } from "@/lib/domain/categories";
-import { useDb } from "@/lib/store/hooks";
-import { publishedCourses } from "@/lib/store/selectors";
+import { useCatalogue, useContent } from "@/components/data/SiteData";
 import { Reveal } from "@/components/motion/Reveal";
 import { Section } from "@/components/ui/Section";
 
@@ -30,21 +29,22 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 /** Bento grid of top-level categories; the first tile is the large dark one. */
-export function CategoryShowcase(): ReactElement {
-  const db = useDb();
-  const courses = publishedCourses(db);
-  const tree = buildCategoryTree(db.categories);
+export function CategoryShowcase(): ReactElement | null {
+  const { sections } = useContent();
+  const { courses, categories } = useCatalogue();
+  const tree = buildCategoryTree(categories);
+  if (tree.length === 0) return null;
   // The large first tile fills two rows; with an odd number of small tiles beside it,
   // the last one spans two columns so the grid has no empty cell.
   const widenLast = tree.length <= 5 && (tree.length - 1) % 2 === 1;
 
   return (
     <Section tone="mist" labelledBy="categories-title">
-      <ContentHeading id="categories-title" copy={db.content.sections.categories} />
+      <ContentHeading id="categories-title" copy={sections.categories} />
       <Reveal stagger className="grid auto-rows-fr gap-4 md:grid-cols-2 lg:grid-cols-3">
         {tree.map((category, index) => {
           const Icon = ICONS[category.slug] ?? Shapes;
-          const ids = descendantIds(db.categories, category.id);
+          const ids = descendantIds(categories, category.id);
           const count = courses.filter((course) => ids.has(course.categoryId)).length;
           const feature = index === 0;
           return (

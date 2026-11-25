@@ -2,8 +2,7 @@
 
 import type { ReactElement } from "react";
 
-import { useDb } from "@/lib/store/hooks";
-import { publishedCourses } from "@/lib/store/selectors";
+import { useCatalogue, useContent } from "@/components/data/SiteData";
 import { ConnectedCourseCard } from "@/components/courses/ConnectedCourseCard";
 import { Reveal } from "@/components/motion/Reveal";
 import { Button } from "@/components/ui/Button";
@@ -11,16 +10,16 @@ import { Section } from "@/components/ui/Section";
 
 import { ContentHeading } from "./ContentHeading";
 
-export function FeaturedCourses(): ReactElement {
-  const db = useDb();
-  const featured = publishedCourses(db)
-    .filter((course) => course.featured)
-    .slice(0, 3);
+export function FeaturedCourses(): ReactElement | null {
+  const { sections } = useContent();
+  const { courses } = useCatalogue();
+  const featured = courses.filter((course) => course.featured).slice(0, 3);
+  if (featured.length === 0) return null;
   return (
     <Section labelledBy="featured-title">
       <ContentHeading
         id="featured-title"
-        copy={db.content.sections.featured}
+        copy={sections.featured}
         action={
           <Button href="/courses" variant="secondary" arrow>
             All courses

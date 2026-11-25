@@ -2,7 +2,8 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, Clock } from "lucide-react";
 
-import type { Category, Course, Instructor } from "@/types/domain";
+import type { CatalogueCourse } from "@/types/catalogue";
+import type { Category, Instructor } from "@/types/domain";
 import { formatDate, formatDuration, formatPKR, initials } from "@/lib/domain/format";
 import type { EnrolmentState } from "@/lib/domain/orders";
 
@@ -10,7 +11,7 @@ import { CourseCover } from "./CourseCover";
 import { EnrolmentBadge } from "./EnrolmentBadge";
 
 interface CourseCardProps {
-  course: Course;
+  course: CatalogueCourse;
   instructor?: Instructor;
   category?: Category;
   enrolment: EnrolmentState;

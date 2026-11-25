@@ -4,17 +4,16 @@ import type { ReactElement } from "react";
 import { Wallet } from "lucide-react";
 
 import { formatDate, formatPKR } from "@/lib/domain/format";
-import { unpaidCommissions } from "@/lib/api/teachers";
-import { useDb } from "@/lib/store/hooks";
-import { courseById, teacherSummary } from "@/lib/store/selectors";
-import { useTeacher } from "@/lib/store/useRoleUser";
+import { courseById, teacherSummary, unpaidCommissions } from "@/lib/portal/selectors";
+import { useTeacher } from "@/lib/account/useRoleUser";
+import { usePortalData } from "@/components/data/PortalData";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatCard } from "@/components/ui/StatCard";
 
 export function TeacherEarnings(): ReactElement | null {
-  const db = useDb();
+  const db = usePortalData();
   const teacher = useTeacher();
   if (!teacher) return null;
   const summary = teacherSummary(db, teacher.id);

@@ -3,8 +3,8 @@
 import type { ReactElement } from "react";
 
 import type { SiteContent } from "@/types/domain";
-import { settingsApi } from "@/lib/api";
 import { contactContentSchema, footerSchema } from "@/lib/validation/content";
+import { saveContentBlock } from "@/server/actions/content";
 
 import { ContentSection } from "./ContentSection";
 
@@ -29,7 +29,7 @@ export function FooterContentTab({ content }: { content: SiteContent }): ReactEl
           { key: "blurb", label: "About text", kind: "multiline" },
         ]}
         schema={footerSchema}
-        onSave={(value) => settingsApi.saveContent("footer", value)}
+        onSave={(value) => saveContentBlock({ key: "footer", value })}
       />
       <ContentSection
         title="Contact details"
@@ -42,7 +42,7 @@ export function FooterContentTab({ content }: { content: SiteContent }): ReactEl
           { key: "address", label: "Address" },
         ]}
         schema={contactContentSchema}
-        onSave={(value) => settingsApi.saveContent("contact", value)}
+        onSave={(value) => saveContentBlock({ key: "contact", value })}
       />
     </>
   );

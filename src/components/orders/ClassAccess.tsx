@@ -5,8 +5,8 @@ import { Award, Video } from "lucide-react";
 
 import type { Order } from "@/types/domain";
 import { formatClassTime, formatDate } from "@/lib/domain/format";
-import { useDb } from "@/lib/store/hooks";
-import { certificateForOrder, courseById, meetingFor } from "@/lib/store/selectors";
+import { certificateForOrder, courseById, meetingFor } from "@/lib/portal/selectors";
+import { usePortalData } from "@/components/data/PortalData";
 import { ClassStatusBadge } from "@/components/classes/ClassStatusBadge";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
@@ -14,7 +14,7 @@ import { Card } from "@/components/ui/Card";
 
 /** For a confirmed order: the personal Zoom link, then the certificate once completed. */
 export function ClassAccess({ order }: { order: Order }): ReactElement | null {
-  const db = useDb();
+  const db = usePortalData();
   const course = courseById(db, order.courseId);
   const meeting = meetingFor(db, order.courseId);
   const registrant = meeting?.registrants.find((item) => item.orderId === order.id);

@@ -11,9 +11,9 @@ export function newId(prefix: string): string {
   return `${prefix}_${randomChars(10).toLowerCase()}`;
 }
 
-/** Public order number shown to students, e.g. RLX-4F7K2. */
+/** Public order number shown to students, e.g. RLX-4F7K2P. */
 export function newOrderNumber(): string {
-  return `RLX-${randomChars(5)}`;
+  return `RLX-${randomChars(6)}`;
 }
 
 /** Referral code built from a teacher's first name, e.g. SANA-7K2. */
@@ -23,11 +23,6 @@ export function newPromoCode(name: string): string {
     .slice(0, 6)
     .toUpperCase();
   return `${stem || "TEACH"}-${randomChars(3)}`;
-}
-
-/** Temporary password emailed to new teachers. */
-export function newTempPassword(): string {
-  return `Rlx-${randomChars(4)}-${randomChars(4)}`;
 }
 
 export function newCertificateCode(): string {

@@ -2,23 +2,22 @@
 
 import type { ReactElement } from "react";
 
-import type { Course } from "@/types/domain";
-import { enrolmentState, seatsLeft } from "@/lib/domain/orders";
-import { useDb } from "@/lib/store/hooks";
-import { categoryById, instructorById } from "@/lib/store/selectors";
+import type { CatalogueCourse } from "@/types/catalogue";
+import { courseEnrolment, courseSeatsLeft } from "@/lib/domain/catalogue";
+import { useCatalogue } from "@/components/data/SiteData";
 
 import { CourseCard } from "./CourseCard";
 
-/** CourseCard wired to the store (instructor, category and seat data). */
-export function ConnectedCourseCard({ course }: { course: Course }): ReactElement {
-  const db = useDb();
+/** CourseCard with its instructor, category and seat data. */
+export function ConnectedCourseCard({ course }: { course: CatalogueCourse }): ReactElement {
+  const { instructors, categories } = useCatalogue();
   return (
     <CourseCard
       course={course}
-      instructor={instructorById(db, course.instructorId)}
-      category={categoryById(db, course.categoryId)}
-      enrolment={enrolmentState(course, db.orders)}
-      seatsLeft={seatsLeft(course, db.orders)}
+      instructor={instructors.find((instructor) => instructor.id === course.instructorId)}
+      category={categories.find((category) => category.id === course.categoryId)}
+      enrolment={courseEnrolment(course)}
+      seatsLeft={courseSeatsLeft(course)}
     />
   );
 }

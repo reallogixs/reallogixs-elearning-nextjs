@@ -1,10 +1,5 @@
-export interface ReadFile {
-  fileName: string;
-  mimeType: string;
-  url: string;
-}
-
-const MAX_EDGE = 1400;
+const MAX_EDGE = 1600;
+const LOGO_EDGE = 256;
 
 function readAsDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -15,12 +10,7 @@ function readAsDataUrl(file: Blob): Promise<string> {
   });
 }
 
-/** Shrinks big photos so the demo's localStorage doesn't fill up. */
-async function downscale(
-  file: File,
-  maxEdge: number,
-  type: "image/jpeg" | "image/png",
-): Promise<string> {
+async function draw(file: File, maxEdge: number): Promise<HTMLCanvasElement> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
@@ -28,21 +18,21 @@ async function downscale(
   canvas.height = Math.round(bitmap.height * scale);
   canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  return canvas.toDataURL(type, 0.72);
+  return canvas;
 }
 
-/**
- * MOCK UPLOAD: turns a receipt into a data URL kept in the browser. Cloudinary
- * replaces this with a signed upload that returns a hosted URL. Type and size are
- * already checked by the Yup schema before this runs.
- */
-export async function readReceiptFile(file: File): Promise<ReadFile> {
-  const isImage = file.type.startsWith("image/");
-  const url = isImage ? await downscale(file, MAX_EDGE, "image/jpeg") : await readAsDataUrl(file);
-  return { fileName: file.name, mimeType: isImage ? "image/jpeg" : file.type, url };
+/** Shrinks a photo so it uploads quickly on mobile data. PDFs go up as they are. */
+export async function prepareReceipt(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  const canvas = await draw(file, MAX_EDGE);
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.8),
+  );
+  return blob && blob.size < file.size ? new File([blob], file.name, { type: "image/jpeg" }) : file;
 }
 
-/** MOCK UPLOAD for payment method logos (SVG kept as-is, rasters shrunk, transparency kept). */
+/** A logo for the form's preview: SVG as it is, others shrunk with transparency kept. */
 export async function readLogoFile(file: File): Promise<string> {
-  return file.type === "image/svg+xml" ? readAsDataUrl(file) : downscale(file, 256, "image/png");
+  if (file.type === "image/svg+xml") return readAsDataUrl(file);
+  return (await draw(file, LOGO_EDGE)).toDataURL("image/png");
 }

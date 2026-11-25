@@ -3,5 +3,16 @@ node_modules
 out
 *.tsbuildinfo
 next-env.d.ts
-.env*.local
+.env
+.env.*
+!.env.example
 .DS_Store
+
+# Prisma client (generated)
+src/server/db/generated
+
+# Development emails (contain one-time links)
+.mail
+
+# Development uploads (receipts and logos)
+.uploads

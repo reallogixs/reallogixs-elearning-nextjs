@@ -3,7 +3,6 @@
 import type { ReactElement } from "react";
 
 import type { SiteContent } from "@/types/domain";
-import { settingsApi } from "@/lib/api";
 import { newId } from "@/lib/domain/ids";
 import {
   faqsSchema,
@@ -13,6 +12,7 @@ import {
   stepsSchema,
   testimonialsSchema,
 } from "@/lib/validation/content";
+import { saveContentBlock, saveContentList } from "@/server/actions/content";
 
 import { ContentListSection } from "./ContentListSection";
 import { ContentSection } from "./ContentSection";
@@ -29,7 +29,7 @@ export function HomeContentTab({ content }: { content: SiteContent }): ReactElem
       value={content.sections[key]}
       fields={SECTION_FIELDS}
       schema={sectionCopySchema}
-      onSave={(value) => settingsApi.saveContentEntry("sections", key, value)}
+      onSave={(value) => saveContentBlock({ key: `sections.${key}`, value })}
     />
   );
 
@@ -58,7 +58,7 @@ export function HomeContentTab({ content }: { content: SiteContent }): ReactElem
           { key: "subtitle", label: "Intro paragraph", kind: "multiline" },
         ]}
         schema={heroSchema}
-        onSave={(value) => settingsApi.saveContent("hero", value)}
+        onSave={(value) => saveContentBlock({ key: "hero", value })}
       />
       {heading(
         "featured",
@@ -81,7 +81,7 @@ export function HomeContentTab({ content }: { content: SiteContent }): ReactElem
         ]}
         schema={stepsSchema}
         createItem={() => ({ title: "", body: "" })}
-        onSave={(items) => settingsApi.saveContent("steps", items)}
+        onSave={(items) => saveContentList({ list: "steps", items })}
       />
       {heading("stats", "Numbers section", "Heading above the count-up numbers.")}
       <ContentListSection
@@ -95,7 +95,7 @@ export function HomeContentTab({ content }: { content: SiteContent }): ReactElem
         ]}
         schema={statsSchema}
         createItem={() => ({ value: "", label: "" })}
-        onSave={(items) => settingsApi.saveContent("stats", items)}
+        onSave={(items) => saveContentList({ list: "stats", items })}
       />
       {heading("testimonials", "Student stories section", "Heading on the gradient band.")}
       <ContentListSection
@@ -121,7 +121,7 @@ export function HomeContentTab({ content }: { content: SiteContent }): ReactElem
           quote: "",
           isPlaceholder: false,
         })}
-        onSave={(items) => settingsApi.saveContent("testimonials", items)}
+        onSave={(items) => saveContentList({ list: "testimonials", items })}
       />
       {heading("faq", "FAQ section", "Heading beside the questions.")}
       <ContentListSection
@@ -134,7 +134,7 @@ export function HomeContentTab({ content }: { content: SiteContent }): ReactElem
         ]}
         schema={faqsSchema}
         createItem={() => ({ id: newId("faq"), question: "", answer: "" })}
-        onSave={(items) => settingsApi.saveContent("faqs", items)}
+        onSave={(items) => saveContentList({ list: "faqs", items })}
       />
     </>
   );

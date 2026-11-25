@@ -3,7 +3,7 @@
 import type { ReactElement } from "react";
 import Link from "next/link";
 
-import { useDb } from "@/lib/store/hooks";
+import { useContent } from "@/components/data/SiteData";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { CircuitLine } from "@/components/brand/CircuitLine";
 import { Button } from "@/components/ui/Button";
@@ -23,13 +23,12 @@ const COLUMNS = [
     links: [
       { href: "/login", label: "Log in" },
       { href: "/signup", label: "Create student account" },
-      { href: "/login?role=teacher", label: "Teacher login" },
     ],
   },
 ] as const;
 
 export function SiteFooter(): ReactElement {
-  const { content } = useDb();
+  const content = useContent();
   const year = new Date().getFullYear();
 
   return (

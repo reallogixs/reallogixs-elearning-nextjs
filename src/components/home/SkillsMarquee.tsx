@@ -2,18 +2,19 @@
 
 import { Fragment, type ReactElement } from "react";
 
-import { useDb } from "@/lib/store/hooks";
+import { useCatalogue } from "@/components/data/SiteData";
 import { ScrollMarquee } from "@/components/motion/ScrollMarquee";
 
 /**
  * Big outline marquee (main site M8, scroll-linked). Decorative: the same categories
  * are real links in the section below, so it is hidden from assistive technology.
  */
-export function SkillsMarquee(): ReactElement {
-  const words = useDb()
+export function SkillsMarquee(): ReactElement | null {
+  const words = useCatalogue()
     .categories.filter((category) => category.parentId !== null)
     .map((category) => category.name);
 
+  if (words.length === 0) return null;
   return (
     <section aria-hidden="true" className="overflow-hidden bg-white py-10 lg:py-14">
       <ScrollMarquee>

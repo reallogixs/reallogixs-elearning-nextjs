@@ -4,27 +4,27 @@ import type { ReactElement } from "react";
 import { Form, Formik } from "formik";
 
 import type { Registrant } from "@/types/domain";
-import { meetingsApi } from "@/lib/api";
 import { useAction } from "@/lib/useAction";
 import { registrantEmailSchema } from "@/lib/validation/admin";
 import { SubmitButton } from "@/components/form/SubmitButton";
 import { TextField } from "@/components/form/TextField";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/Toast";
+import { changeRegistrantEmail } from "@/server/actions/registrants";
 
 interface RegistrantEmailModalProps {
-  courseId: string;
   registrant: Registrant | null;
   onClose: () => void;
 }
 
 /** When a student's Zoom account uses a different email from the one they paid with. */
 export function RegistrantEmailModal({
-  courseId,
   registrant,
   onClose,
 }: RegistrantEmailModalProps): ReactElement {
   const { run } = useAction();
+  const { notify } = useToast();
   return (
     <Modal
       open={Boolean(registrant)}
@@ -38,12 +38,13 @@ export function RegistrantEmailModal({
           initialValues={{ email: registrant.email }}
           validationSchema={registrantEmailSchema}
           onSubmit={async (values) => {
-            const result = await run(
-              "email",
-              () => meetingsApi.changeRegistrantEmail(courseId, registrant.orderId, values),
-              "Zoom email changed. New link emailed.",
+            const { email } = registrantEmailSchema.cast(values);
+            const result = await run("email", () =>
+              changeRegistrantEmail({ number: registrant.orderId, email }),
             );
-            if (result.ok) onClose();
+            if (!result.ok) return;
+            notify(result.data.notice);
+            onClose();
           }}
         >
           <Form noValidate className="flex flex-col gap-5">

@@ -5,12 +5,12 @@ import { useSearchParams } from "next/navigation";
 import { Form, Formik } from "formik";
 
 import type { Certificate } from "@/types/domain";
-import { meetingsApi } from "@/lib/api";
 import { verifyCertificateSchema } from "@/lib/validation/certificate";
 import { FormStatus } from "@/components/form/FormStatus";
 import { SubmitButton } from "@/components/form/SubmitButton";
 import { TextField } from "@/components/form/TextField";
 import { Card } from "@/components/ui/Card";
+import { verifyCertificate } from "@/server/actions/certificates";
 
 import { CertificateResult } from "./CertificateResult";
 
@@ -27,7 +27,7 @@ export function VerifyCertificate(): ReactElement {
           validationSchema={verifyCertificateSchema}
           onSubmit={async (values, { setStatus }) => {
             const { code } = verifyCertificateSchema.cast(values);
-            const result = await meetingsApi.verifyCertificate(code);
+            const result = await verifyCertificate({ code });
             setStatus(result.ok ? undefined : result.error);
             setFound(result.ok ? result.data : null);
           }}

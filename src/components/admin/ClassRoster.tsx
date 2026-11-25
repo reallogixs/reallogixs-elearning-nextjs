@@ -4,15 +4,15 @@ import { useState, type ReactElement } from "react";
 import { AtSign, ExternalLink, Send } from "lucide-react";
 
 import type { Meeting, Registrant } from "@/types/domain";
-import { meetingsApi } from "@/lib/api";
 import { attended, isInMeeting } from "@/lib/domain/meeting";
 import { useAction } from "@/lib/useAction";
-import { useDb } from "@/lib/store/hooks";
-import { certificateForOrder } from "@/lib/store/selectors";
+import { certificateForOrder } from "@/lib/portal/selectors";
+import { usePortalData } from "@/components/data/PortalData";
 import { Badge } from "@/components/ui/Badge";
 import { DataTable } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { IconButton } from "@/components/ui/IconButton";
+import { resendInvite } from "@/server/actions/registrants";
 
 import { RegistrantEmailModal } from "./RegistrantEmailModal";
 
@@ -24,7 +24,7 @@ function Presence({ meeting, orderId }: { meeting: Meeting; orderId: string }): 
 
 /** Paid, confirmed students allowed in, with attendance and certificate. */
 export function ClassRoster({ meeting }: { meeting: Meeting }): ReactElement {
-  const db = useDb();
+  const db = usePortalData();
   const { run, pending } = useAction();
   const [editing, setEditing] = useState<Registrant | null>(null);
   const open = meeting.status !== "ended";
@@ -73,8 +73,8 @@ export function ClassRoster({ meeting }: { meeting: Meeting }): ReactElement {
                         onClick={() =>
                           run(
                             row.orderId,
-                            () => meetingsApi.resendInvite(meeting.courseId, row.orderId),
-                            "Invite emailed again (see Outbox).",
+                            () => resendInvite({ number: row.orderId }),
+                            "Invite emailed again.",
                           )
                         }
                       >
@@ -103,11 +103,7 @@ export function ClassRoster({ meeting }: { meeting: Meeting }): ReactElement {
             : []),
         ]}
       />
-      <RegistrantEmailModal
-        courseId={meeting.courseId}
-        registrant={editing}
-        onClose={() => setEditing(null)}
-      />
+      <RegistrantEmailModal registrant={editing} onClose={() => setEditing(null)} />
     </>
   );
 }

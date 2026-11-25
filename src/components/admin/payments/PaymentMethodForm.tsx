@@ -4,7 +4,6 @@ import type { ReactElement } from "react";
 import { Form, Formik } from "formik";
 
 import type { PaymentMethod } from "@/types/domain";
-import { settingsApi } from "@/lib/api";
 import { newId } from "@/lib/domain/ids";
 import { useAction } from "@/lib/useAction";
 import { paymentMethodSchema, type PaymentMethodFormValues } from "@/lib/validation/admin";
@@ -14,6 +13,7 @@ import { TextField } from "@/components/form/TextField";
 import { TextareaField } from "@/components/form/TextareaField";
 import { PaymentAccountDetails } from "@/components/payments/PaymentAccountDetails";
 import { Button } from "@/components/ui/Button";
+import { savePaymentMethod } from "@/server/actions/paymentMethods";
 
 import { LogoUploadField } from "./LogoUploadField";
 import { PaymentFieldRows } from "./PaymentFieldRows";
@@ -48,7 +48,7 @@ export function PaymentMethodForm({
       onSubmit={async (values) => {
         const result = await run(
           "save",
-          () => settingsApi.savePaymentMethod(values, method?.id),
+          () => savePaymentMethod({ ...paymentMethodSchema.cast(values), id: method?.id ?? "" }),
           "Payment method saved.",
         );
         if (result.ok) onDone();
