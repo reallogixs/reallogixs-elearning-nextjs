@@ -46,7 +46,7 @@ Read `README.md` first (flows, structure, demo accounts, backend migration map).
 ## 2. Stack
 Next.js 16 App Router · React 19 · TypeScript strict · Tailwind CSS v4 (tokens copied from the
 main site) · GSAP + `@gsap/react` · Formik + Yup · lucide-react ·
-pdf-lib (certificates) · pnpm.
+pdf-lib (certificates) · bcrypt · pnpm.
 Ask before adding any other dependency.
 
 ## 3. Code conventions

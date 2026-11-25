@@ -31,3 +31,12 @@ export function mailConfig(): MailConfig | null {
     from: MAIL_FROM ?? `Reallogixs Academy <${SMTP_USER}>`,
   };
 }
+
+/**
+ * Keeps test files apart from real ones. Vercel's preview deployments also run in production
+ * mode, so on Vercel its own setting decides.
+ */
+export function fileEnvironment(): "dev" | "prod" {
+  const { VERCEL_ENV, NODE_ENV } = process.env;
+  return (VERCEL_ENV ?? NODE_ENV) === "production" ? "prod" : "dev";
+}

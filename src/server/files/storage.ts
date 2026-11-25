@@ -6,6 +6,7 @@ import { basename, join } from "node:path";
 
 import { RECEIPT_TYPES } from "@/lib/validation/checkout";
 import { LOGO_MAX_BYTES, LOGO_TYPES } from "@/lib/validation/admin";
+import { fileEnvironment } from "@/server/core/env";
 import { ActionError } from "@/server/core/errors";
 
 import { cloudinaryConfig, destroy, download, imageUrl, upload } from "./cloudinary";
@@ -35,7 +36,7 @@ async function save(kind: Kind, data: ArrayBuffer, mimeType: string): Promise<St
   const config = cloudinaryConfig();
   const name = randomUUID();
   if (config) {
-    const publicId = `academy/${kind}/${name}`;
+    const publicId = `academy/${fileEnvironment()}/${kind}/${name}`;
     const file = new Blob([data], { type: mimeType });
     try {
       if (kind === "receipts") await upload(config, "raw", "private", publicId, file);

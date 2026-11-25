@@ -24,7 +24,12 @@ export const passwordSchema = yup
   .string()
   .required("Enter a password.")
   .min(8, "Use at least 8 characters.")
-  .max(72, "Keep it under 72 characters.");
+  // bcrypt ignores anything past 72 bytes, so a longer password is refused instead.
+  .test(
+    "bytes",
+    "That password is too long. Keep it under 72 characters.",
+    (value) => !value || new TextEncoder().encode(value.normalize("NFKC")).length <= 72,
+  );
 
 export const percentSchema = yup
   .number()

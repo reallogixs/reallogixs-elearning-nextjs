@@ -71,6 +71,7 @@ export const PORTAL_NAV: Record<Role, PortalNavGroup[]> = {
         { href: "/admin/payment-methods", label: "Payment methods", icon: WalletCards },
         { href: "/admin/content", label: "Site content", icon: PanelsTopLeft },
         { href: "/admin/emails", label: "Email log", icon: Mail },
+        { href: "/admin/settings", label: "My account", icon: Settings },
       ],
     },
   ],

@@ -106,6 +106,13 @@ wrong password. `lib/account/loginPath.ts` holds the paths.
 
 ## Accounts
 
+- **Passwords** are bcrypt, cost 12 (`src/server/core/password.ts`), up to 72 bytes. Older scrypt hashes still
+  work and are replaced at the next login. Session and link secrets are random, so they use a fast SHA-256.
+- **Admin email and password:** Admin → My account. A new email only takes over once the link sent to it is
+  used; every device is then signed out and the old email is told.
+- **First admin in production:** put the production `DATABASE_URL` and `SITE_URL` in `.env.prod` (git-ignored),
+  run `pnpm db:admin:prod "Full Name" email@example.com "0300 1234567"`, then delete the file. Without SMTP
+  settings in it, the one-time link is saved in `.mail/`.
 - First admin: `pnpm db:admin "Full Name" email@example.com "0300 1234567"`. It emails a one-time link.
 - Without SMTP settings, development emails are saved in `.mail/` (git-ignored). In production, missing
   SMTP or `SITE_URL` is an error.
@@ -119,6 +126,8 @@ wrong password. `lib/account/loginPath.ts` holds the paths.
 - Layouts and pages load the data; screens read it with `usePortalData()`. Nothing is kept in the browser.
 - Receipts are checked by their first bytes, stored privately, and only served by `/api/receipts/[id]`
   to an admin or the order's own student. Nobody gets a Cloudinary link.
+- Cloudinary folders: `academy/prod/…` on the live site, `academy/dev/…` everywhere else, including Vercel
+  previews. Files uploaded earlier stay where they are and keep working.
 - Without Cloudinary settings, development files go to `.uploads/` (git-ignored). In production that is
   an error.
 - The whole admin order list loads with the portal. Add paging before there are thousands of orders.

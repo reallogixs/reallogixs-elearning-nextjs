@@ -31,7 +31,12 @@ export function ProfileForm({ user }: { user: User }): ReactElement {
       >
         <Form method="post" noValidate className="grid gap-5 md:grid-cols-3">
           <TextField name="name" label="Full name" autoComplete="name" />
-          <Field label="Email" hint="Contact us to change your login email.">
+          <Field
+            label="Email"
+            hint={
+              user.role === "admin" ? "Change it below." : "Contact us to change your login email."
+            }
+          >
             {(control) => <Input {...control} value={user.email} readOnly />}
           </Field>
           <TextField name="phone" label="WhatsApp number" type="tel" autoComplete="tel" />

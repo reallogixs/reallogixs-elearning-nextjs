@@ -53,3 +53,16 @@ export type ChangePasswordInput = yup.InferType<typeof changePasswordSchema>;
 
 export const profileSchema = yup.object({ name: nameSchema, phone: phoneSchema });
 export type ProfileInput = yup.InferType<typeof profileSchema>;
+
+export const changeEmailSchema = yup.object({
+  email: emailSchema,
+  password: yup
+    .string()
+    .required("Enter your current password.")
+    .max(200, "That password is too long."),
+});
+export type ChangeEmailInput = yup.InferType<typeof changeEmailSchema>;
+
+export const confirmEmailSchema = yup.object({
+  token: yup.string().required("This link isn't complete. Open it again from your email."),
+});

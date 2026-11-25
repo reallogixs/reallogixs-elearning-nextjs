@@ -13,11 +13,16 @@ import {
   setPasswordSchema,
   signupSchema,
 } from "@/lib/validation/auth";
-import { consumeToken, createPasswordLink, findTokenUser } from "@/server/core/accountTokens";
+import {
+  consumeToken,
+  createPasswordLink,
+  findTokenUser,
+  PASSWORD_LINKS,
+} from "@/server/core/accountTokens";
 import { publicAction, userAction } from "@/server/core/action";
 import { siteUrl } from "@/server/core/env";
 import { ActionError } from "@/server/core/errors";
-import { hashPassword, verifyPassword } from "@/server/core/password";
+import { hashPassword, isOldHash, verifyPassword } from "@/server/core/password";
 import { clientIp, limit } from "@/server/core/request";
 import { endAllSessions, endSession, startSession } from "@/server/core/session";
 import { db } from "@/server/db";
@@ -46,6 +51,11 @@ export const login = publicAction(
     if (!user || !matches || user.archivedAt || user.role !== input.role)
       throw new ActionError("That email and password don't match.");
     if (!user.active) throw new ActionError("This account is paused. Contact the Reallogixs team.");
+    if (user.passwordHash && isOldHash(user.passwordHash))
+      await db().user.updateMany({
+        where: { id: user.id, passwordHash: user.passwordHash },
+        data: { passwordHash: await hashPassword(input.password) },
+      });
     await startSession(user);
     return { role: user.role };
   },
@@ -106,11 +116,11 @@ export const setPassword = publicAction(
   async (input): Promise<{ role: Role }> => {
     await limit("set-password", await clientIp(), 30, 15);
     const client = db();
-    const userId = await findTokenUser(client, input.token);
+    const userId = await findTokenUser(client, input.token, PASSWORD_LINKS);
     if (!userId) throw new ActionError(BAD_LINK);
     const passwordHash = await hashPassword(input.password);
     const user = await client.$transaction(async (tx) => {
-      if (!(await consumeToken(tx, input.token))) throw new ActionError(BAD_LINK);
+      if (!(await consumeToken(tx, input.token, PASSWORD_LINKS))) throw new ActionError(BAD_LINK);
       const current = await tx.user.findUniqueOrThrow({ where: { id: userId } });
       if (!current.active || current.archivedAt)
         throw new ActionError("This account is paused. Contact the Reallogixs team.");

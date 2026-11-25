@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/portal/PageHeader";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { ProfileForm } from "./ProfileForm";
 
-/** Settings page shared by the student and teacher portals. */
+/** Settings page shared by the portals. */
 export function AccountSettings(): ReactElement | null {
   const user = useCurrentUser();
   if (!user) return null;

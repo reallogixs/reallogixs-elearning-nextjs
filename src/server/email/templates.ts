@@ -208,3 +208,30 @@ export function certificateIssued(
     { label: "View my certificate", url: certificate.url },
   );
 }
+
+export function confirmNewEmail(name: string, url: string): EmailContent {
+  return compose(
+    "confirm_email",
+    "Confirm your new email",
+    name,
+    [
+      "Use this link to move your Reallogixs Academy login to this email. It works once, for 24 hours.",
+      "If you didn't ask for this, ignore this email and nothing will change.",
+    ],
+    { label: "Confirm new email", url },
+  );
+}
+
+export function emailChanging(name: string, done: boolean, url: string): EmailContent {
+  return compose(
+    done ? "email_changed" : "email_changing",
+    done ? "Your login email was changed" : "Your login email is being changed",
+    name,
+    [
+      done
+        ? "Your Reallogixs Academy login was moved to another email and every device was signed out. If this wasn't you, contact the Reallogixs team straight away."
+        : "Someone signed in to your account asked to move its login to another email. It changes once they confirm from that email. If this wasn't you, reset your password now: that also cancels the change.",
+    ],
+    done ? undefined : { label: "Reset password", url },
+  );
+}

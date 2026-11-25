@@ -62,7 +62,9 @@ export async function upload(
   publicId: string,
   file: Blob,
 ): Promise<void> {
-  const fields = signed(config, { public_id: publicId, type });
+  // Newer Cloudinary accounts group files by folder, not by name, so both are given.
+  const folder = publicId.slice(0, publicId.lastIndexOf("/"));
+  const fields = signed(config, { public_id: publicId, asset_folder: folder, type });
   await post(endpoint(config, resource, "upload"), fields, file);
 }
 
