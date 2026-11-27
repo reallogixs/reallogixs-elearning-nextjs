@@ -521,3 +521,16 @@ dialog.drawer[open]::backdrop {
     display: none;
   }
 }
+
+/* Certificates print in their colours, landscape. */
+@media print {
+  .certificate-page,
+  .certificate-page * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+@page {
+  size: A4 landscape;
+  margin: 0;
+}

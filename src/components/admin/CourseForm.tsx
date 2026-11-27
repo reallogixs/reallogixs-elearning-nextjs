@@ -6,6 +6,7 @@ import { Form, Formik } from "formik";
 
 import type { Category, Course, Instructor } from "@/types/domain";
 import { slugify, toPktInput } from "@/lib/domain/format";
+import { FEATURED_LIMIT } from "@/lib/domain/catalogue";
 import { PAGE, startLoading } from "@/lib/loadingBar";
 import { useAction } from "@/lib/useAction";
 import { courseSchema, type CourseFormValues } from "@/lib/validation/admin";
@@ -19,6 +20,7 @@ import { Card } from "@/components/ui/Card";
 import { Switch } from "@/components/ui/Switch";
 import { saveCourse } from "@/server/actions/catalogue";
 
+import { BannerUploadField } from "./BannerUploadField";
 import { categoryOptions } from "./categoryOptions";
 
 const LEVELS = [
@@ -44,6 +46,7 @@ function toForm(course?: Course): CourseFormValues {
     status: course?.status ?? "draft",
     enrolmentOpen: course?.enrolmentOpen ?? true,
     featured: course?.featured ?? false,
+    bannerUrl: course?.bannerUrl ?? null,
   };
 }
 
@@ -129,6 +132,10 @@ export function CourseForm({ course, categories, instructors }: CourseFormProps)
             />
           </Card>
 
+          <Card>
+            <BannerUploadField name="bannerUrl" />
+          </Card>
+
           <Card className="grid gap-5 md:grid-cols-2">
             <div className="flex flex-col gap-1 md:col-span-2">
               <h2 className="text-h4">Masterclass</h2>
@@ -183,7 +190,11 @@ export function CourseForm({ course, categories, instructors }: CourseFormProps)
               label="Enrolment open"
               description="Turn off to stop new enrolments before the class is full."
             />
-            <SwitchField name="featured" label="Featured on home page" />
+            <SwitchField
+              name="featured"
+              label="Featured on home page"
+              description={`Shows once the course is published, until its class is completed. Up to ${FEATURED_LIMIT} appear, those taking enrolments first.`}
+            />
           </Card>
 
           <div className="flex justify-end gap-3">

@@ -92,6 +92,6 @@ export async function download(config: Config, publicId: string): Promise<ArrayB
   return response.arrayBuffer();
 }
 
-export function imageUrl(config: Config, publicId: string): string {
-  return `https://res.cloudinary.com/${config.cloud}/image/upload/c_limit,w_256,f_auto,q_auto/${publicId}`;
+export function imageUrl(config: Config, publicId: string, size: string): string {
+  return `https://res.cloudinary.com/${config.cloud}/image/upload/${size},f_auto,q_auto/${publicId}`;
 }

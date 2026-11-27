@@ -1,7 +1,19 @@
-import { PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, rgb, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
 
+import {
+  BAND,
+  certificatePieces,
+  INK,
+  PAGE,
+  type CertificateFont,
+  type CertificatePiece,
+} from "@/lib/certificateLayout";
 import { formatDate } from "@/lib/domain/format";
 import { LOGO_PATH, LOGO_VIEWBOX } from "@/components/brand/logoPath";
+import { CHECK_BADGE, CHECK_TICK } from "@/components/certificates/CertificateSeal";
+
+import { fontBytes, layoutCertificateText } from "./certificateFonts";
 
 /** What is printed on a certificate. */
 export interface PrintedCertificate {
@@ -11,143 +23,177 @@ export interface PrintedCertificate {
   issuedAt: string;
 }
 
-/** A4 landscape, in points. */
-const PAGE = { width: 841.89, height: 595.28 };
-const MARGIN = 64;
-const WIDTH = PAGE.width - MARGIN * 2;
-const LOGO_WIDTH = 150;
-
-/** Brand tokens (tokens.css): PDFs can't read CSS variables. */
-const COLOUR = {
-  ink: rgb(0.055, 0.09, 0.149),
-  soft: rgb(0.29, 0.337, 0.408),
-  teal: rgb(0.106, 0.416, 0.522),
-  sky: rgb(0.239, 0.576, 0.761),
-  line: rgb(0.863, 0.89, 0.918),
+const hex = (value: string): RGB => {
+  const [r = 0, g = 0, b = 0] = [1, 3, 5].map((at) => parseInt(value.slice(at, at + 2), 16) / 255);
+  return rgb(r, g, b);
 };
+const WHITE = rgb(1, 1, 1);
 
-function fits(font: PDFFont, text: string, size: number): boolean {
-  return font.widthOfTextAtSize(text, size) <= WIDTH;
+/** PDF measures from the bottom; the layout from the top. */
+const up = (top: number): number => PAGE.height - top;
+
+function mix(from: string, to: string, amount: number): RGB {
+  const [a, b] = [from, to].map((value) =>
+    [1, 3, 5].map((at) => parseInt(value.slice(at, at + 2), 16) / 255),
+  );
+  const part = (index: number): number =>
+    (a?.[index] ?? 0) + ((b?.[index] ?? 0) - (a?.[index] ?? 0)) * amount;
+  return rgb(part(0), part(1), part(2));
 }
 
-/** Splits into lines that fit the page. */
-function wrap(font: PDFFont, text: string, size: number): string[] {
-  return text.split(/\s+/).reduce<string[]>((lines, word) => {
-    const last = lines.at(-1);
-    if (last !== undefined && fits(font, `${last} ${word}`, size))
-      return [...lines.slice(0, -1), `${last} ${word}`];
-    return [...lines, word];
-  }, []);
-}
-
-/** Draws centred lines, shrinking the text until it needs at most two. Returns the next y. */
-function centred(
-  page: PDFPage,
-  font: PDFFont,
-  text: string,
-  y: number,
-  size: number,
-  color: RGB,
-): number {
-  let used = size;
-  let lines = wrap(font, text, used);
-  while (used > 12 && (lines.length > 2 || lines.some((line) => !fits(font, line, used)))) {
-    used -= 1;
-    lines = wrap(font, text, used);
+/** Navy fading to teal at the bottom with a faint grid: the web page's band. */
+function drawBand(page: PDFPage): void {
+  const steps = 80;
+  for (let index = 0; index < steps; index += 1) {
+    const share = index / (steps - 1);
+    const colour =
+      share < 0.55
+        ? mix(INK.navy, INK.navySoft, share / 0.55)
+        : mix(INK.navySoft, INK.bandEnd, (share - 0.55) / 0.45);
+    const height = PAGE.height / steps;
+    page.drawRectangle({
+      x: 0,
+      y: up((index + 1) * height),
+      width: BAND.width,
+      height: height + 0.4,
+      color: colour,
+    });
   }
-  return lines.reduce((at, line) => {
-    const x = (PAGE.width - font.widthOfTextAtSize(line, used)) / 2;
-    page.drawText(line, { x, y: at, size: used, font, color });
-    return at - used * 1.25;
-  }, y);
+  const grid = { thickness: 0.4, color: hex(INK.grid), opacity: 0.7 };
+  for (let x = 32; x < BAND.width; x += 32)
+    page.drawLine({ start: { x, y: 0 }, end: { x, y: PAGE.height }, ...grid });
+  // Counted from the top, as on the web page.
+  for (let top = 32; top < PAGE.height; top += 32)
+    page.drawLine({ start: { x: 0, y: up(top) }, end: { x: BAND.width, y: up(top) }, ...grid });
+}
+
+function drawText(
+  page: PDFPage,
+  fonts: Record<CertificateFont, PDFFont>,
+  piece: Extract<CertificatePiece, { kind: "text" }>,
+): void {
+  const font = fonts[piece.font];
+  const letters = [...piece.text];
+  const natural = font.widthOfTextAtSize(piece.text, piece.size);
+  const tracking = piece.width
+    ? (piece.width - natural) / Math.max(1, letters.length - 1)
+    : (piece.tracking ?? 0);
+  const options = { y: up(piece.baseline), size: piece.size, font, color: hex(piece.colour) };
+  if (!tracking) {
+    page.drawText(piece.text, { ...options, x: piece.x });
+    return;
+  }
+  let x = piece.x;
+  for (const letter of letters) {
+    page.drawText(letter, { ...options, x });
+    x += font.widthOfTextAtSize(letter, piece.size) + tracking;
+  }
+}
+
+/** The same 100-unit drawing as the web seal. */
+function drawSeal(
+  page: PDFPage,
+  fonts: Record<CertificateFont, PDFFont>,
+  x: number,
+  top: number,
+  size: number,
+): void {
+  const s = size / 100;
+  const centre = { x: x + 50 * s, y: up(top + 50 * s) };
+  page.drawCircle({ ...centre, size: 50 * s, color: hex(INK.skyLight) });
+  page.drawCircle({ ...centre, size: 45 * s, color: hex(INK.navy) });
+  page.drawCircle({
+    ...centre,
+    size: 39 * s,
+    borderColor: WHITE,
+    borderOpacity: 0.45,
+    borderWidth: s,
+    borderDashArray: [3 * s, 3 * s],
+  });
+  const icon = 1.08 * s;
+  for (const path of [CHECK_BADGE, CHECK_TICK])
+    page.drawSvgPath(path, {
+      x: x + 37 * s,
+      y: up(top + 25 * s),
+      scale: icon,
+      borderColor: hex("#5FD3F5"),
+      borderWidth: 1.8 * icon,
+    });
+  drawText(page, fonts, {
+    kind: "text",
+    text: "VERIFIED",
+    font: "sansBold",
+    size: 9 * s,
+    colour: "#FFFFFF",
+    x: x + 27 * s,
+    baseline: top + 69 * s,
+    width: 46 * s,
+  });
 }
 
 /**
- * The certificate as a PDF. Null if the name or title uses letters the built-in fonts don't have
- * (e.g. Urdu script): the web page still shows those correctly.
+ * The certificate as a PDF, from the same pieces and fonts as the web page. Null if the name or
+ * title uses letters the fonts don't have (e.g. Urdu script): the web page shows those.
  */
 export async function certificatePdf(certificate: PrintedCertificate): Promise<Uint8Array | null> {
+  const text = await layoutCertificateText(certificate.studentName, certificate.courseTitle);
+  if (!text.printable) return null;
   const pdf = await PDFDocument.create();
-  const regular = await pdf.embedFont(StandardFonts.Helvetica);
-  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const mono = await pdf.embedFont(StandardFonts.Courier);
-  const name = certificate.studentName.normalize("NFC");
-  const title = certificate.courseTitle.normalize("NFC");
-  const letters = new Set(bold.getCharacterSet());
-  if ([...`${name}${title}`].some((letter) => !letters.has(letter.codePointAt(0) ?? 0)))
-    return null;
-
+  pdf.registerFontkit(fontkit);
+  const bytes = await fontBytes();
+  const entries = await Promise.all(
+    (Object.keys(bytes) as CertificateFont[]).map(
+      async (name) => [name, await pdf.embedFont(bytes[name], { subset: true })] as const,
+    ),
+  );
+  const fonts = Object.fromEntries(entries) as Record<CertificateFont, PDFFont>;
   pdf.setTitle(`Certificate ${certificate.code}`);
   pdf.setAuthor("Reallogixs Academy");
   const page = pdf.addPage([PAGE.width, PAGE.height]);
-  page.drawRectangle({
-    x: 24,
-    y: 24,
-    width: PAGE.width - 48,
-    height: PAGE.height - 48,
-    borderColor: COLOUR.line,
-    borderWidth: 1,
-  });
+  drawBand(page);
 
+  const pieces = certificatePieces({
+    ...text,
+    issued: formatDate(certificate.issuedAt),
+    code: certificate.code,
+  });
   const logoWidth = Number(LOGO_VIEWBOX.split(/\s+/)[2]);
-  const top = PAGE.height - MARGIN;
-  page.drawSvgPath(LOGO_PATH, {
-    x: MARGIN,
-    y: top,
-    scale: LOGO_WIDTH / logoWidth,
-    color: COLOUR.teal,
-  });
-  const label = "CERTIFICATE OF COMPLETION";
-  page.drawText(label, {
-    x: PAGE.width - MARGIN - mono.widthOfTextAtSize(label, 10),
-    y: top - 18,
-    size: 10,
-    font: mono,
-    color: COLOUR.soft,
-  });
-
-  let y = 372;
-  y = centred(page, regular, "This certifies that", y, 14, COLOUR.soft) - 28;
-  y = centred(page, bold, name, y, 40, COLOUR.ink);
-  y = centred(page, regular, "attended the live masterclass", y + 4, 14, COLOUR.soft) - 14;
-  centred(page, bold, title, y, 24, COLOUR.teal);
-
-  // The circuit line ending in a ring node.
-  const base = 118;
-  const points: [number, number][] = [
-    [MARGIN, base],
-    [MARGIN + 260, base],
-    [MARGIN + 290, base + 18],
-    [PAGE.width - MARGIN - 14, base + 18],
-  ];
-  points.slice(1).forEach(([x2, y2], index) => {
-    const [x1, y1] = points[index] ?? [x2, y2];
-    page.drawLine({
-      start: { x: x1, y: y1 },
-      end: { x: x2, y: y2 },
-      thickness: 1,
-      color: COLOUR.sky,
-    });
-  });
-  page.drawCircle({
-    x: PAGE.width - MARGIN - 7,
-    y: base + 18,
-    size: 7,
-    borderColor: COLOUR.sky,
-    borderWidth: 1,
-  });
-
-  const foot = { y: 84, size: 11, color: COLOUR.soft };
-  page.drawText(`Issued ${formatDate(certificate.issuedAt)}`, {
-    ...foot,
-    x: MARGIN,
-    font: regular,
-  });
-  const code = `Verify: ${certificate.code}`;
-  page.drawText(code, {
-    ...foot,
-    x: PAGE.width - MARGIN - mono.widthOfTextAtSize(code, foot.size),
-    font: mono,
-  });
+  for (const piece of pieces) {
+    if (piece.kind === "text") drawText(page, fonts, piece);
+    else if (piece.kind === "rule")
+      page.drawRectangle({
+        x: piece.x,
+        y: up(piece.top + piece.height),
+        width: piece.width,
+        height: piece.height,
+        color: hex(piece.colour),
+      });
+    else if (piece.kind === "logo")
+      page.drawSvgPath(LOGO_PATH, {
+        x: piece.x,
+        y: up(piece.top),
+        scale: piece.width / logoWidth,
+        color: WHITE,
+      });
+    else if (piece.kind === "seal") drawSeal(page, fonts, piece.x, piece.top, piece.size);
+    else {
+      piece.points.slice(1).forEach(([x2, y2], index) => {
+        const [x1, y1] = piece.points[index] ?? [x2, y2];
+        page.drawLine({
+          start: { x: x1, y: up(y1) },
+          end: { x: x2, y: up(y2) },
+          thickness: 1,
+          color: hex(piece.colour),
+        });
+      });
+      page.drawCircle({
+        x: piece.node[0],
+        y: up(piece.node[1]),
+        size: 5,
+        borderColor: hex(piece.colour),
+        borderWidth: 1,
+      });
+    }
+  }
   return pdf.save();
 }

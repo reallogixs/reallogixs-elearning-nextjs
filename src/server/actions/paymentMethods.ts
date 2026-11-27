@@ -10,7 +10,7 @@ import { roleAction } from "@/server/core/action";
 import { audit } from "@/server/core/audit";
 import { ActionError } from "@/server/core/errors";
 import { db, type Tx } from "@/server/db";
-import { removeFile, saveLogo } from "@/server/files/storage";
+import { removeFile, saveImage } from "@/server/files/storage";
 
 async function findMethod(client: Tx, id: string) {
   const method = await client.paymentMethod.findFirst({ where: { id, archivedAt: null } });
@@ -25,7 +25,7 @@ export const savePaymentMethod = roleAction(
   savePaymentMethodSchema,
   async ({ id, logoUrl, fields, ...values }, admin): Promise<void> => {
     const before = id ? await findMethod(db(), id) : null;
-    const uploaded = logoUrl?.startsWith("data:") ? await saveLogo(logoUrl) : null;
+    const uploaded = logoUrl?.startsWith("data:") ? await saveImage("logos", logoUrl) : null;
     const logoPublicId = uploaded ?? (logoUrl ? (before?.logoPublicId ?? null) : null);
     const rows = fields.map(({ label, value, copyable }, position) => ({
       label,

@@ -47,6 +47,8 @@ export const courseSchema = yup.object({
   status: yup.mixed<"draft" | "published">().oneOf(["draft", "published"]).required(),
   enrolmentOpen: yup.boolean().required(),
   featured: yup.boolean().required(),
+  /** A new banner as a data URL, the current one's address, or null for none. */
+  bannerUrl: yup.string().nullable().default(null),
 });
 export type CourseFormValues = yup.InferType<typeof courseSchema>;
 
@@ -80,6 +82,18 @@ export const teacherSchema = yup.object({
   discountPct: percentSchema,
 });
 export type TeacherFormValues = yup.InferType<typeof teacherSchema>;
+
+export const BANNER_MAX_BYTES = 3 * 1024 * 1024;
+export const BANNER_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+export const bannerFileSchema = yup.object({
+  banner: fileSchema(
+    BANNER_TYPES,
+    12 * 1024 * 1024,
+    "Use a JPG, PNG or WebP image.",
+    "That image is over 12 MB.",
+  ),
+});
 
 export const LOGO_MAX_BYTES = 512 * 1024;
 export const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];

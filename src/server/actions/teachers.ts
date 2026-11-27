@@ -1,6 +1,5 @@
 "use server";
 
-import { LOGIN_PATH } from "@/lib/account/loginPath";
 import { newPromoCode } from "@/lib/domain/ids";
 import {
   teacherActiveSchema,
@@ -11,14 +10,8 @@ import {
 import { createPasswordLink } from "@/server/core/accountTokens";
 import { roleAction } from "@/server/core/action";
 import { audit } from "@/server/core/audit";
-import { siteUrl } from "@/server/core/env";
 import { ActionError } from "@/server/core/errors";
 import { db, type Tx } from "@/server/db";
-import { sendMail } from "@/server/email/send";
-import { teacherInvite } from "@/server/email/templates";
-
-const NOT_SENT =
-  "Saved, but the email couldn't be sent. Check the email settings and send it again.";
 
 async function assertFree(
   client: Tx,
@@ -49,28 +42,26 @@ async function findTeacher(client: Tx, id: string) {
   return { ...user, teacher: user.teacher };
 }
 
-/** Emails a fresh one-time link. Returns whether it was sent. */
-async function invite(id: string): Promise<boolean> {
-  const client = db();
-  const user = await findTeacher(client, id);
-  const url = await createPasswordLink(client, id, "set_password");
-  const discount = user.teacher.discountPct.toNumber();
-  const rates = `You earn ${user.teacher.commissionPct.toString()}% of every confirmed enrolment made with it${
-    discount ? `, and your students save ${discount}%` : ""
-  }.`;
-  return sendMail(
-    user.email,
-    teacherInvite(user.name, url, user.teacher.promoCode, rates, siteUrl(LOGIN_PATH.teacher)),
-    id,
-  );
+export interface TeacherLink {
+  notice: string;
+  /** Teachers aren't emailed: the admin sends them this link themselves. */
+  link: string;
 }
 
-/** Only admins create teachers, who choose their own password from the emailed link. */
+/** A fresh one-time link for the admin to pass on. Earlier links stop working. */
+async function invite(id: string): Promise<TeacherLink> {
+  const client = db();
+  await findTeacher(client, id);
+  const link = await createPasswordLink(client, id, "set_password");
+  return { notice: "Send this link to the teacher. It works once, for 48 hours.", link };
+}
+
+/** Only admins create teachers, who choose their own password from a one-time link. */
 export const createTeacher = roleAction(
   "create-teacher",
   "admin",
   teacherSchema,
-  async (input, admin): Promise<{ notice: string }> => {
+  async (input, admin): Promise<TeacherLink> => {
     const email = input.email.toLowerCase();
     const user = await db().$transaction(async (tx) => {
       await assertFree(tx, { email, promoCode: input.promoCode });
@@ -93,7 +84,7 @@ export const createTeacher = roleAction(
       await audit(tx, admin.id, "teacher.create", "user", created.id);
       return created;
     });
-    return { notice: (await invite(user.id)) ? "Teacher added and invited by email." : NOT_SENT };
+    return invite(user.id);
   },
 );
 
@@ -161,10 +152,10 @@ export const sendTeacherLink = roleAction(
   "teacher-link",
   "admin",
   idSchema,
-  async ({ id }, admin): Promise<{ notice: string }> => {
+  async ({ id }, admin): Promise<TeacherLink> => {
     const user = await findTeacher(db(), id);
     if (!user.active) throw new ActionError("Activate this teacher first.");
     await audit(db(), admin.id, "teacher.send_link", "user", id);
-    return { notice: (await invite(id)) ? "Password link emailed." : NOT_SENT };
+    return invite(id);
   },
 );

@@ -13,7 +13,8 @@ import { CheckEmail } from "./CheckEmail";
 
 const initialValues: SignupInput = { name: "", email: "", phone: "" };
 
-export function SignupForm(): ReactElement {
+/** `onSent` replaces the "check your email" note, e.g. to carry on with checkout. */
+export function SignupForm({ onSent }: { onSent?: (values: SignupInput) => void }): ReactElement {
   const [sentTo, setSentTo] = useState<string | null>(null);
   if (sentTo)
     return (
@@ -28,7 +29,8 @@ export function SignupForm(): ReactElement {
       validationSchema={signupSchema}
       onSubmit={async (values, { setStatus }) => {
         const result = await requestSignup(values);
-        if (result.ok) setSentTo(values.email);
+        if (result.ok && onSent) onSent(signupSchema.cast(values));
+        else if (result.ok) setSentTo(values.email);
         else setStatus(result.error);
       }}
     >

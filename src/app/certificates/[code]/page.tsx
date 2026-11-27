@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { buildMetadata } from "@/lib/seo";
 import { CertificateView } from "@/components/certificates/CertificateView";
 import { NotFoundState } from "@/components/ui/NotFoundState";
+import { layoutCertificateText } from "@/server/files/certificateFonts";
 import { findCertificate } from "@/server/queries/classes";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,10 @@ export default async function CertificatePage({
   return (
     <main id="main">
       {certificate && !certificate.revokedAt ? (
-        <CertificateView certificate={certificate} />
+        <CertificateView
+          certificate={certificate}
+          text={await layoutCertificateText(certificate.studentName, certificate.courseTitle)}
+        />
       ) : (
         <NotFoundState
           title={certificate ? "Certificate revoked" : "Certificate not found"}

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { PortalDataProvider } from "@/components/data/PortalData";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { requirePortal } from "@/server/core/page";
+import { adminNotices } from "@/server/queries/notifications";
 import { adminData } from "@/server/queries/orders";
 
 export const metadata: Metadata = {
@@ -22,10 +23,12 @@ export default async function AdminLayout({
   const pending = data.then(
     ({ orders }) => orders.filter((order) => order.status === "pending").length,
   );
-  // The page shows the error; the badge just stays empty.
+  const notices = adminNotices().then((list) => list.length);
+  // The page shows the error; the badges just stay empty.
   pending.catch(() => undefined);
+  notices.catch(() => undefined);
   return (
-    <PortalShell account={account} pending={pending}>
+    <PortalShell account={account} pending={pending} notices={notices}>
       <PortalDataProvider data={data}>{children}</PortalDataProvider>
     </PortalShell>
   );

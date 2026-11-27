@@ -27,7 +27,12 @@ export function CourseCard({
 }: CourseCardProps): ReactElement {
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-lg border border-line bg-white transition-[transform,border-color,box-shadow] duration-base ease-out-expo hover:-translate-y-1 hover:border-sky-300 hover:shadow-card">
-      <CourseCover title={course.title} category={category?.name} mode={course.mode} />
+      <CourseCover
+        title={course.title}
+        bannerUrl={course.bannerUrl}
+        category={category?.name}
+        mode={course.mode}
+      />
       <div className="flex flex-1 flex-col gap-4 p-5">
         <EnrolmentBadge state={enrolment} seatsLeft={seatsLeft} className="self-start" />
         <div className="flex flex-col gap-2">

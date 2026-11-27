@@ -51,6 +51,8 @@ export interface Course {
   /** The admin can close enrolment before the course is full. */
   enrolmentOpen: boolean;
   featured: boolean;
+  /** Uploaded banner; null shows the branded artwork. */
+  bannerUrl: string | null;
   createdAt: ISODate;
 }
 

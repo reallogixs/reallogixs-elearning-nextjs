@@ -10,7 +10,7 @@ import { confirmEmailSchema } from "@/lib/validation/auth";
 import { FormStatus } from "@/components/form/FormStatus";
 import { SubmitButton } from "@/components/form/SubmitButton";
 import { useToast } from "@/components/ui/Toast";
-import { confirmEmailChange } from "@/server/actions/adminEmail";
+import { confirmEmailChange } from "@/server/actions/email";
 
 export function ConfirmEmailForm({ token }: { token: string }): ReactElement {
   const router = useRouter();

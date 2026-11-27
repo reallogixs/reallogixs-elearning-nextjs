@@ -12,7 +12,6 @@ import { TextField } from "@/components/form/TextField";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { useToast } from "@/components/ui/Toast";
 import { createTeacher, updateTeacher } from "@/server/actions/teachers";
 
 export type TeacherDraft = { teacher?: TeacherAccount } | null;
@@ -20,12 +19,13 @@ export type TeacherDraft = { teacher?: TeacherAccount } | null;
 function TeacherForm({
   teacher,
   onDone,
+  onLink,
 }: {
   teacher?: TeacherAccount;
   onDone: () => void;
+  onLink: (name: string, url: string) => void;
 }): ReactElement {
   const { run } = useAction();
-  const { notify } = useToast();
   const router = useRouter();
   const initialValues: TeacherFormValues = {
     name: teacher?.name ?? "",
@@ -50,7 +50,7 @@ function TeacherForm({
             )
           : await run("save", () => createTeacher(values));
         if (!result.ok) return;
-        if (result.data) notify(result.data.notice);
+        if (result.data) onLink(values.name, result.data.link);
         router.refresh();
         onDone();
       }}
@@ -91,16 +91,15 @@ function TeacherForm({
         />
         {!teacher ? (
           <Alert tone="info" className="sm:col-span-2">
-            They get an email with their promo code and a one-time link to choose a password.
+            Next you get a one-time link to send them, so they can choose a password. Their promo
+            code is in their portal.
           </Alert>
         ) : null}
         <div className="flex justify-end gap-3 sm:col-span-2">
           <Button variant="ghost" size="sm" onClick={onDone}>
             Cancel
           </Button>
-          <SubmitButton size="sm">
-            {teacher ? "Save changes" : "Add teacher & send email"}
-          </SubmitButton>
+          <SubmitButton size="sm">{teacher ? "Save changes" : "Add teacher"}</SubmitButton>
         </div>
       </Form>
     </Formik>
@@ -110,9 +109,11 @@ function TeacherForm({
 export function TeacherFormModal({
   draft,
   onClose,
+  onLink,
 }: {
   draft: TeacherDraft;
   onClose: () => void;
+  onLink: (name: string, url: string) => void;
 }): ReactElement {
   return (
     <Modal
@@ -122,7 +123,12 @@ export function TeacherFormModal({
       description="Only admins can create teacher accounts."
     >
       {draft ? (
-        <TeacherForm key={draft.teacher?.id ?? "new"} teacher={draft.teacher} onDone={onClose} />
+        <TeacherForm
+          key={draft.teacher?.id ?? "new"}
+          teacher={draft.teacher}
+          onDone={onClose}
+          onLink={onLink}
+        />
       ) : null}
     </Modal>
   );

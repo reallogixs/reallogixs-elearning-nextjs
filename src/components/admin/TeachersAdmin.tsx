@@ -14,17 +14,17 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
 import { IconButton } from "@/components/ui/IconButton";
-import { useToast } from "@/components/ui/Toast";
 import { sendTeacherLink, setTeacherActive } from "@/server/actions/teachers";
 
 import { TeacherFormModal, type TeacherDraft } from "./TeacherFormModal";
+import { TeacherLinkModal } from "./TeacherLinkModal";
 
 export function TeachersAdmin({ accounts }: { accounts: TeacherAccount[] }): ReactElement {
   const db = usePortalData();
   const { run, pending } = useAction();
-  const { notify } = useToast();
   const router = useRouter();
   const [draft, setDraft] = useState<TeacherDraft>(null);
+  const [link, setLink] = useState<{ name: string; url: string } | null>(null);
 
   async function toggle(teacher: TeacherAccount): Promise<void> {
     await run(
@@ -39,7 +39,8 @@ export function TeachersAdmin({ accounts }: { accounts: TeacherAccount[] }): Rea
 
   async function sendLink(teacher: TeacherAccount): Promise<void> {
     const result = await run(`pw-${teacher.id}`, () => sendTeacherLink({ id: teacher.id }));
-    if (result.ok) notify(result.data.notice);
+    if (!result.ok) return;
+    setLink({ name: teacher.name, url: result.data.link });
   }
 
   return (
@@ -115,7 +116,7 @@ export function TeachersAdmin({ accounts }: { accounts: TeacherAccount[] }): Rea
                   {teacher.active ? "Pause" : "Activate"}
                 </Button>
                 <IconButton
-                  label={`Email a password link to ${teacher.name}`}
+                  label={`Password link for ${teacher.name}`}
                   onClick={() => sendLink(teacher)}
                 >
                   <KeyRound className="size-4" />
@@ -128,7 +129,12 @@ export function TeachersAdmin({ accounts }: { accounts: TeacherAccount[] }): Rea
           },
         ]}
       />
-      <TeacherFormModal draft={draft} onClose={() => setDraft(null)} />
+      <TeacherFormModal
+        draft={draft}
+        onClose={() => setDraft(null)}
+        onLink={(name, url) => setLink({ name, url })}
+      />
+      <TeacherLinkModal link={link} onClose={() => setLink(null)} />
     </>
   );
 }

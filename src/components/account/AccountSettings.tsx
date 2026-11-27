@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 import { useCurrentUser } from "@/lib/account/useCurrentUser";
 import { PageHeader } from "@/components/portal/PageHeader";
 
+import { ChangeEmailForm } from "./ChangeEmailForm";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { ProfileForm } from "./ProfileForm";
 
@@ -14,8 +15,9 @@ export function AccountSettings(): ReactElement | null {
   if (!user) return null;
   return (
     <>
-      <PageHeader title="Settings" description="Update your details and password." />
+      <PageHeader title="Settings" description="Update your details, login email and password." />
       <ProfileForm user={user} />
+      {user.role === "teacher" ? null : <ChangeEmailForm />}
       <ChangePasswordForm />
     </>
   );

@@ -1,12 +1,14 @@
 import type { ReactElement } from "react";
 import { CircleCheck, CircleX, Clock, Mail } from "lucide-react";
 
-import type { EmailLogEntry } from "@/types/portal";
+import type { EmailLogEntry, EmailQueueStats } from "@/types/portal";
 import { formatDateTime } from "@/lib/domain/format";
 import { PageHeader } from "@/components/portal/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { DataTable } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
+
+import { EmailQueuePanel } from "./EmailQueuePanel";
 
 const STATUS: Record<EmailLogEntry["status"], ReactElement> = {
   sent: (
@@ -21,19 +23,26 @@ const STATUS: Record<EmailLogEntry["status"], ReactElement> = {
   ),
   queued: (
     <Badge tone="warning" icon={<Clock />}>
-      Sending
+      Queued
     </Badge>
   ),
 };
 
 /** What was emailed to whom. The text isn't kept: it can hold one-time links. */
-export function EmailLog({ emails }: { emails: EmailLogEntry[] }): ReactElement {
+export function EmailLog({
+  emails,
+  stats,
+}: {
+  emails: EmailLogEntry[];
+  stats: EmailQueueStats;
+}): ReactElement {
   return (
     <>
       <PageHeader
         title="Email log"
-        description="The latest 200 emails. If one failed, check the mailbox settings and send it again from the class, certificate or teacher."
+        description="The latest 200 emails. Certificates go out in batches of about 30 a minute, so a big class takes a while. Other failed emails can be sent again from their class, certificate or teacher."
       />
+      <EmailQueuePanel stats={stats} />
       <DataTable
         caption="Emails"
         rows={emails}

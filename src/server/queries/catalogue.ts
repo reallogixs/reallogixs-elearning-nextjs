@@ -7,6 +7,7 @@ import type { Catalogue, CatalogueCourse } from "@/types/catalogue";
 import type { Course } from "@/types/domain";
 import { TAG } from "@/server/core/tags";
 import { db } from "@/server/db";
+import { fileUrl } from "@/server/files/storage";
 
 async function load(): Promise<Catalogue> {
   const client = db();
@@ -32,11 +33,13 @@ async function load(): Promise<Catalogue> {
         updatedAt,
         startsAt,
         createdAt,
+        bannerPublicId,
         ...course
       }): CatalogueCourse => {
         void [archivedAt, updatedAt];
         return {
           ...course,
+          bannerUrl: fileUrl("banners", bannerPublicId),
           startsAt: startsAt.toISOString(),
           createdAt: createdAt.toISOString(),
           seatsTaken: _count.orders,

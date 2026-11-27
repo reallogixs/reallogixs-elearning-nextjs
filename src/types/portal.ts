@@ -42,3 +42,25 @@ export interface EmailLogEntry {
   status: "queued" | "sent" | "failed";
   createdAt: ISODate;
 }
+
+/** Something an admin needs to act on. */
+export interface AdminNotice {
+  id: string;
+  kind: "payment" | "class" | "email";
+  /** Waiting more than a day, or blocking students. */
+  urgent: boolean;
+  title: string;
+  body: string;
+  at: ISODate;
+  href: string;
+}
+
+export interface EmailQueueStats {
+  queued: number;
+  /** Queued but waiting to be retried after a failure. */
+  retrying: number;
+  failed: number;
+  /** Failed emails the queue can send again. */
+  retryable: number;
+  sentToday: number;
+}

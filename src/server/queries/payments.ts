@@ -2,7 +2,7 @@ import "server-only";
 
 import type { PaymentMethod } from "@/types/domain";
 import { db } from "@/server/db";
-import { logoUrl } from "@/server/files/storage";
+import { fileUrl } from "@/server/files/storage";
 
 /** In checkout order. Students only ever get the enabled ones. */
 export async function listPaymentMethods(filter: {
@@ -16,7 +16,7 @@ export async function listPaymentMethods(filter: {
   return methods.map((method) => ({
     id: method.id,
     name: method.name,
-    logoUrl: logoUrl(method.logoPublicId),
+    logoUrl: fileUrl("logos", method.logoPublicId),
     fields: method.fields.map(({ id, label, value, copyable }) => ({ id, label, value, copyable })),
     instructions: method.instructions,
     enabled: method.enabled,

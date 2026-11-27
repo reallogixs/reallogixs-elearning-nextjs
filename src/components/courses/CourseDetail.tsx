@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { MobileActionBar } from "@/components/ui/MobileActionBar";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 
+import { CourseCover } from "./CourseCover";
 import { CourseFacts } from "./CourseFacts";
 import { EnrolmentBadge } from "./EnrolmentBadge";
 import { InstructorCard } from "./InstructorCard";
@@ -50,8 +51,19 @@ export function CourseDetail({ course, text }: CourseDetailProps): ReactElement 
           <div className="flex flex-wrap gap-2">
             <EnrolmentBadge state={state} seatsLeft={left} />
           </div>
-          <h1 className="max-w-3xl text-h1">{course.title}</h1>
-          <p className="max-w-2xl text-body-lg text-ink-soft">{course.summary}</p>
+          <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_1fr]">
+            <div className="flex flex-col gap-5">
+              <h1 className="max-w-3xl text-h1">{course.title}</h1>
+              <p className="max-w-2xl text-body-lg text-ink-soft">{course.summary}</p>
+            </div>
+            <CourseCover
+              title={course.title}
+              bannerUrl={course.bannerUrl}
+              category={trail.at(-1)?.name}
+              mode={course.mode}
+              className="rounded-lg shadow-card"
+            />
+          </div>
         </div>
       </section>
 

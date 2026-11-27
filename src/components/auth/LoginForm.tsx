@@ -14,7 +14,14 @@ import { login } from "@/server/actions/account";
 
 const initialValues: LoginInput = { email: "", password: "" };
 
-export function LoginForm({ role, next }: { role: Role; next: string | null }): ReactElement {
+interface LoginFormProps {
+  role: Role;
+  next: string | null;
+  /** Stay on this page instead of going to the portal, e.g. at checkout. */
+  onSignedIn?: () => Promise<void>;
+}
+
+export function LoginForm({ role, next, onSignedIn }: LoginFormProps): ReactElement {
   const enterPortal = useEnterPortal();
 
   return (
@@ -23,8 +30,9 @@ export function LoginForm({ role, next }: { role: Role; next: string | null }): 
       validationSchema={loginSchema}
       onSubmit={async (values, { setStatus }) => {
         const result = await login({ ...values, role });
-        if (result.ok) await enterPortal(result.data.role, next);
-        else setStatus(result.error);
+        if (!result.ok) setStatus(result.error);
+        else if (onSignedIn) await onSignedIn();
+        else await enterPortal(result.data.role, next);
       }}
     >
       <Form method="post" noValidate className="flex flex-col gap-5">

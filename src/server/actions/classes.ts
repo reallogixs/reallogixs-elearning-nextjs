@@ -6,11 +6,12 @@ import { after } from "next/server";
 import { idSchema } from "@/lib/validation/admin";
 import { roleAction } from "@/server/core/action";
 import { audit } from "@/server/core/audit";
-import { issueCertificates, sendCertificates } from "@/server/core/certificates";
+import { issueCertificates, queueCertificates } from "@/server/core/certificates";
 import { ActionError } from "@/server/core/errors";
 import { lockMeeting } from "@/server/core/locks";
 import { TAG } from "@/server/core/tags";
 import { db, type Tx } from "@/server/db";
+import { drainQueue } from "@/server/email/worker";
 
 /* Ids are course ids: each course has one class. Start and end stand in for Zoom's webhooks. */
 
@@ -91,11 +92,13 @@ export const completeClass = roleAction(
         { id: meeting.id, courseId: id, startedAt },
         meeting.course.title,
       );
+      await queueCertificates(tx, ids);
       await audit(tx, admin.id, "class.complete", "course", id, { issued: ids.length });
       return ids;
     });
     updateTag(TAG.catalogue);
-    after(() => sendCertificates(certificates));
+    // Any size of class: the queue sends them in batches, handing over between runs.
+    after(drainQueue);
     return { issued: certificates.length };
   },
 );

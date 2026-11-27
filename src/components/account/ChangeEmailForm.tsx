@@ -9,7 +9,7 @@ import { SubmitButton } from "@/components/form/SubmitButton";
 import { TextField } from "@/components/form/TextField";
 import { Card } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
-import { requestEmailChange } from "@/server/actions/adminEmail";
+import { requestEmailChange } from "@/server/actions/email";
 
 const initialValues: ChangeEmailInput = { email: "", password: "" };
 
@@ -21,7 +21,8 @@ export function ChangeEmailForm(): ReactElement {
       <div>
         <h2 className="text-h4">Change login email</h2>
         <p className="text-small text-ink-soft">
-          We&apos;ll send a link to the new address. Nothing changes until you open it.
+          We&apos;ll send a link to the new address. Nothing changes until you open it, and an email
+          another account already uses can&apos;t be chosen.
         </p>
       </div>
       <Formik

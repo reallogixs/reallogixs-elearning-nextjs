@@ -111,9 +111,15 @@ const instructors: Instructor[] = [
 const now = "2026-11-20T09:00:00.000Z";
 
 function course(
-  partial: Omit<Course, "status" | "enrolmentOpen" | "createdAt"> & Partial<Course>,
+  partial: Omit<Course, "status" | "enrolmentOpen" | "createdAt" | "bannerUrl"> & Partial<Course>,
 ): Course {
-  return { status: "published", enrolmentOpen: true, createdAt: now, ...partial };
+  return {
+    status: "published",
+    enrolmentOpen: true,
+    createdAt: now,
+    bannerUrl: null,
+    ...partial,
+  };
 }
 
 const courses: Course[] = [

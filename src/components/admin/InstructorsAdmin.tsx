@@ -77,10 +77,10 @@ export function InstructorsAdmin({ instructors }: { instructors: Instructor[] })
           </Button>
         }
       />
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid auto-rows-fr gap-4 md:grid-cols-2">
         {instructors.map((instructor) => (
-          <div key={instructor.id} className="relative bg-white">
-            <InstructorCard instructor={instructor} />
+          <div key={instructor.id} className="relative">
+            <InstructorCard instructor={instructor} className="h-full pr-24" />
             <div className="absolute top-2 right-2 flex">
               <IconButton
                 label={`Edit ${instructor.name}`}

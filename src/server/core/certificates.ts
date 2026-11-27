@@ -3,6 +3,8 @@ import "server-only";
 import { newCertificateCode } from "@/lib/domain/ids";
 import { siteUrl } from "@/server/core/env";
 import { db, type Tx } from "@/server/db";
+import type { EmailContent } from "@/server/email/layout";
+import { enqueueEmails } from "@/server/email/queue";
 import { sendMail } from "@/server/email/send";
 import { certificateIssued } from "@/server/email/templates";
 import { certificatePdf } from "@/server/files/certificatePdf";
@@ -47,36 +49,54 @@ export async function issueCertificates(
   return created.map(({ id }) => id);
 }
 
-/** Returns whether it was sent. */
-export async function sendCertificate(id: string): Promise<boolean> {
-  const { order, ...certificate } = await db().certificate.findUniqueOrThrow({
+/** The certificate email with its PDF, or null if it shouldn't go out (missing or revoked). */
+export async function buildCertificateEmail(
+  id: string,
+): Promise<{ to: string; content: EmailContent } | null> {
+  const found = await db().certificate.findUnique({
     where: { id },
-    include: { order: { select: { id: true, contactEmail: true } } },
+    include: { order: { select: { contactEmail: true } } },
   });
+  if (!found || found.revokedAt) return null;
+  const { order, ...certificate } = found;
   const email = certificateIssued(certificate.studentName, {
     course: certificate.courseTitle,
     code: certificate.code,
     url: siteUrl(`/certificates/${certificate.code}`),
     verifyUrl: siteUrl("/verify"),
   });
-  const content = await certificatePdf({
+  const pdf = await certificatePdf({
     ...certificate,
     issuedAt: certificate.issuedAt.toISOString(),
   });
   const filename = `${certificate.code}.pdf`;
-  return sendMail(
-    order.contactEmail,
-    content
-      ? { ...email, attachments: [{ filename, content, contentType: "application/pdf" }] }
+  return {
+    to: order.contactEmail,
+    content: pdf
+      ? { ...email, attachments: [{ filename, content: pdf, contentType: "application/pdf" }] }
       : email,
-    order.id,
-  );
+  };
 }
 
-const AT_ONCE = 3;
+/** One certificate, sent now (an admin's resend). Returns whether it was sent. */
+export async function sendCertificate(id: string): Promise<boolean> {
+  const email = await buildCertificateEmail(id);
+  return email ? sendMail(email.to, email.content, id) : false;
+}
 
-/** A few at a time, so the mail server isn't flooded. Failures can be sent again one by one. */
-export async function sendCertificates(ids: string[]): Promise<void> {
-  for (let start = 0; start < ids.length; start += AT_ONCE)
-    await Promise.allSettled(ids.slice(start, start + AT_ONCE).map(sendCertificate));
+/** A class's certificates join the email queue in the same transaction that creates them. */
+export async function queueCertificates(tx: Tx, ids: string[]): Promise<void> {
+  const certificates = await tx.certificate.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, courseTitle: true, order: { select: { contactEmail: true } } },
+  });
+  await enqueueEmails(
+    tx,
+    certificates.map((certificate) => ({
+      template: "certificate_issued",
+      entityId: certificate.id,
+      to: certificate.order.contactEmail,
+      subject: `Your certificate: ${certificate.courseTitle}`,
+    })),
+  );
 }

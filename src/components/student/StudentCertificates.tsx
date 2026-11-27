@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/portal/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { CertificateSeal } from "@/components/certificates/CertificateSeal";
 
 export function StudentCertificates(): ReactElement | null {
   const db = usePortalData();
@@ -36,21 +37,35 @@ export function StudentCertificates(): ReactElement | null {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {certificates.map((certificate) => (
-            <Card key={certificate.id} className="flex flex-col gap-3">
-              <Award aria-hidden="true" className="size-6 text-teal-600" />
-              <p className="font-display text-h4">{certificate.courseTitle}</p>
-              <p className="text-small text-ink-soft">
-                Issued {formatDate(certificate.issuedAt)} ·{" "}
-                <span className="font-mono">{certificate.code}</span>
-              </p>
-              <Button
-                href={`/certificates/${certificate.code}`}
-                size="sm"
-                variant="secondary"
-                className="self-start"
-              >
-                View &amp; print
-              </Button>
+            <Card key={certificate.id} padded={false} className="overflow-hidden">
+              <div className="on-dark relative isolate flex items-center gap-4 bg-gradient-deep p-5 text-white">
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 -z-10 bg-grid-dark opacity-60"
+                />
+                <CertificateSeal className="size-14" />
+                <p className="font-display text-h4 text-white">{certificate.courseTitle}</p>
+              </div>
+              <div className="flex flex-col gap-4 p-5">
+                <p className="text-small text-ink-soft">
+                  Issued {formatDate(certificate.issuedAt)} ·{" "}
+                  <span className="font-mono text-ink">{certificate.code}</span>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button href={`/certificates/${certificate.code}`} size="sm">
+                    View certificate
+                  </Button>
+                  <Button
+                    href={`/certificates/${certificate.code}/pdf`}
+                    prefetch={false}
+                    data-file
+                    size="sm"
+                    variant="secondary"
+                  >
+                    Download PDF
+                  </Button>
+                </div>
+              </div>
             </Card>
           ))}
         </div>

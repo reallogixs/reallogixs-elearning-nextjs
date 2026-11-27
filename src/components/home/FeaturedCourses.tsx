@@ -2,6 +2,7 @@
 
 import type { ReactElement } from "react";
 
+import { courseEnrolment, FEATURED_LIMIT } from "@/lib/domain/catalogue";
 import { useCatalogue, useContent } from "@/components/data/SiteData";
 import { ConnectedCourseCard } from "@/components/courses/ConnectedCourseCard";
 import { Reveal } from "@/components/motion/Reveal";
@@ -13,7 +14,11 @@ import { ContentHeading } from "./ContentHeading";
 export function FeaturedCourses(): ReactElement | null {
   const { sections } = useContent();
   const { courses } = useCatalogue();
-  const featured = courses.filter((course) => course.featured).slice(0, 3);
+  // Ones still taking enrolments first, then by start date (the catalogue's order).
+  const featured = courses
+    .filter((course) => course.featured)
+    .sort((a, b) => Number(courseEnrolment(b) === "open") - Number(courseEnrolment(a) === "open"))
+    .slice(0, FEATURED_LIMIT);
   if (featured.length === 0) return null;
   return (
     <Section labelledBy="featured-title">

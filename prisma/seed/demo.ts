@@ -84,7 +84,8 @@ export async function seedDemo(db: PrismaClient): Promise<void> {
       await tx.instructor.createMany({
         data: seed.instructors.map((item) => ({ ...item, id: uuid(item.id) })),
       });
-      for (const { id, categoryId, instructorId, ...course } of seed.courses) {
+      for (const { id, categoryId, instructorId, bannerUrl, ...course } of seed.courses) {
+        void bannerUrl;
         await tx.course.create({
           data: {
             ...course,

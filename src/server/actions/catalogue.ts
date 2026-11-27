@@ -18,6 +18,7 @@ import { audit } from "@/server/core/audit";
 import { ActionError } from "@/server/core/errors";
 import { TAG } from "@/server/core/tags";
 import { db, type Tx } from "@/server/db";
+import { removeFile, saveImage } from "@/server/files/storage";
 
 /** Frees the slug for reuse while the archived record keeps its history. */
 function archivedSlug(slug: string, id: string): string {
@@ -44,11 +45,17 @@ export const saveCourse = roleAction(
   "save-course",
   "admin",
   saveCourseSchema,
-  async ({ id, ...values }, admin): Promise<void> => {
+  async ({ id, bannerUrl, ...values }, admin): Promise<void> => {
+    const previous = id
+      ? await db().course.findUnique({ where: { id }, select: { bannerPublicId: true } })
+      : null;
+    const uploaded = bannerUrl?.startsWith("data:") ? await saveImage("banners", bannerUrl) : null;
+    const bannerPublicId = uploaded ?? (bannerUrl ? (previous?.bannerPublicId ?? null) : null);
     const startsAt = new Date(fromPktInput(values.startsAt));
     if (Number.isNaN(startsAt.getTime())) throw new ActionError("Pick a real date and time.");
     const data = {
       ...values,
+      bannerPublicId,
       startsAt,
       outcomes: values.outcomes
         .split("\n")
@@ -58,42 +65,49 @@ export const saveCourse = roleAction(
     // Outside the transaction: it talks to Zoom.
     const created = id ? null : await zoom.createMeeting();
 
-    const zoomId = await db().$transaction(async (tx) => {
-      await assertSlugFree(tx, "course", values.slug, id);
-      const [category, instructor] = await Promise.all([
-        tx.category.findFirst({ where: { id: values.categoryId, archivedAt: null } }),
-        tx.instructor.findFirst({ where: { id: values.instructorId, archivedAt: null } }),
-      ]);
-      if (!category) throw new ActionError("That category no longer exists.");
-      if (!instructor) throw new ActionError("That instructor no longer exists.");
+    const zoomId = await db()
+      .$transaction(async (tx) => {
+        await assertSlugFree(tx, "course", values.slug, id);
+        const [category, instructor] = await Promise.all([
+          tx.category.findFirst({ where: { id: values.categoryId, archivedAt: null } }),
+          tx.instructor.findFirst({ where: { id: values.instructorId, archivedAt: null } }),
+        ]);
+        if (!category) throw new ActionError("That category no longer exists.");
+        if (!instructor) throw new ActionError("That instructor no longer exists.");
 
-      if (created) {
-        const course = await tx.course.create({
-          data: { ...data, meeting: { create: { zoomId: created.zoomId } } },
+        if (created) {
+          const course = await tx.course.create({
+            data: { ...data, meeting: { create: { zoomId: created.zoomId } } },
+          });
+          await audit(tx, admin.id, "course.create", "course", course.id);
+          return null;
+        }
+        const before = await tx.course.findFirst({
+          where: { id, archivedAt: null },
+          include: {
+            meeting: true,
+            _count: { select: { orders: { where: { status: "confirmed" } } } },
+          },
         });
-        await audit(tx, admin.id, "course.create", "course", course.id);
-        return null;
-      }
-      const before = await tx.course.findFirst({
-        where: { id, archivedAt: null },
-        include: {
-          meeting: true,
-          _count: { select: { orders: { where: { status: "confirmed" } } } },
-        },
+        if (!before) throw new ActionError("Course not found.");
+        const held = before.meeting !== null && before.meeting.status !== "scheduled";
+        if (held && before.startsAt.getTime() !== startsAt.getTime())
+          throw new ActionError("This class has already been held, so its date can't change.");
+        if (values.seats < before._count.orders)
+          throw new ActionError(`${before._count.orders} students are already confirmed.`);
+        await tx.course.update({
+          where: { id },
+          data: { ...data, enrolmentOpen: held ? false : values.enrolmentOpen },
+        });
+        await audit(tx, admin.id, "course.update", "course", id);
+        return before.meeting?.zoomId ?? null;
+      })
+      .catch(async (error: unknown) => {
+        if (uploaded) await removeFile("banners", uploaded);
+        throw error;
       });
-      if (!before) throw new ActionError("Course not found.");
-      const held = before.meeting !== null && before.meeting.status !== "scheduled";
-      if (held && before.startsAt.getTime() !== startsAt.getTime())
-        throw new ActionError("This class has already been held, so its date can't change.");
-      if (values.seats < before._count.orders)
-        throw new ActionError(`${before._count.orders} students are already confirmed.`);
-      await tx.course.update({
-        where: { id },
-        data: { ...data, enrolmentOpen: held ? false : values.enrolmentOpen },
-      });
-      await audit(tx, admin.id, "course.update", "course", id);
-      return before.meeting?.zoomId ?? null;
-    });
+    if (previous?.bannerPublicId && previous.bannerPublicId !== bannerPublicId)
+      await removeFile("banners", previous.bannerPublicId);
     if (zoomId) await zoom.updateMeeting(zoomId, { title: values.title });
     updateTag(TAG.catalogue);
   },

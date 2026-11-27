@@ -3,8 +3,9 @@ import "server-only";
 import { cache } from "react";
 
 import type { Certificate } from "@/types/domain";
-import type { EmailLogEntry, JoinInfo } from "@/types/portal";
+import type { EmailLogEntry, EmailQueueStats, JoinInfo } from "@/types/portal";
 import { db } from "@/server/db";
+import { QUEUED_TEMPLATES } from "@/server/email/queue";
 
 import { toCertificate } from "./orderShape";
 
@@ -42,4 +43,27 @@ export async function listEmails(): Promise<EmailLogEntry[]> {
     select: { id: true, subject: true, to: true, status: true, createdAt: true },
   });
   return rows.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() }));
+}
+
+/** Admin only: how the email queue stands. */
+export async function emailQueueStats(): Promise<EmailQueueStats> {
+  const client = db();
+  const now = new Date();
+  const today = new Date(now.getTime() - 24 * 3_600_000);
+  const [queued, retrying, failed, retryable, sentToday] = await Promise.all([
+    client.emailMessage.count({ where: { status: "queued" } }),
+    client.emailMessage.count({
+      where: { status: "queued", attempts: { gt: 0 }, nextAttemptAt: { gt: now } },
+    }),
+    client.emailMessage.count({ where: { status: "failed" } }),
+    client.emailMessage.count({
+      where: {
+        status: "failed",
+        template: { in: [...QUEUED_TEMPLATES] },
+        error: { not: "not_sendable" },
+      },
+    }),
+    client.emailMessage.count({ where: { status: "sent", sentAt: { gte: today } } }),
+  ]);
+  return { queued, retrying, failed, retryable, sentToday };
 }

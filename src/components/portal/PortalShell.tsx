@@ -19,11 +19,18 @@ interface PortalShellProps {
   account: Account;
   /** Admins: receipts awaiting verification. */
   pending?: Promise<number>;
+  /** Admins: things that need them. */
+  notices?: Promise<number>;
   children: ReactNode;
 }
 
 /** Layout for every portal: light sidebar on desktop, the same sidebar in a drawer on mobile. */
-export function PortalShell({ account, pending, children }: PortalShellProps): ReactElement {
+export function PortalShell({
+  account,
+  pending,
+  notices,
+  children,
+}: PortalShellProps): ReactElement {
   const { role } = account;
   const hydrated = useHydrated();
   const [open, setOpen] = useState(false);
@@ -36,7 +43,7 @@ export function PortalShell({ account, pending, children }: PortalShellProps): R
         <div className="flex min-w-0 flex-col">
           <PortalTopbar
             role={role}
-            pending={pending}
+            notices={notices}
             onOpenMenu={() => setOpen(true)}
             menuOpen={open}
           />

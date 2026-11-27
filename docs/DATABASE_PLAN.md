@@ -93,6 +93,37 @@ Each phase ends with the site working, and lint, typecheck, build and a browser 
   a PDF (`src/server/files/certificatePdf.ts`, `pdf-lib`). Names in scripts its fonts lack, such as Urdu,
   get the link to the web certificate instead.
 
+## Emails
+
+- One branded layout (`src/server/email/layout.ts`) with the logo embedded as a PNG, since email apps
+  don't show SVG. Without SMTP, development saves each email as `.txt` and a viewable `.html` in `.mail/`.
+- **Bulk email goes through a queue** (`src/server/email/queue.ts`, `worker.ts`). Completing a class adds its
+  certificate emails to `email_messages` as "queued" in the same transaction, then returns. Workers take 5
+  at a time (`FOR UPDATE SKIP LOCKED`, so runs never overlap), send them over one connection, one every
+  2 seconds (about 1,800 an hour), and stop after 40 seconds. If more are waiting, the run calls
+  `/api/email-queue` to start the next one, so any class size finishes without hitting Vercel's time limit.
+  A failed send is retried after 1, 5, 15 and 60 minutes, then marked failed. Nothing secret is stored: the
+  email and PDF are rebuilt from the certificate when sent. Tested with 600 certificates: each sent once.
+- `CRON_SECRET` (Vercel → Settings → Environment Variables) lets runs start each other; Vercel Cron also
+  calls the queue once a day (`vercel.json`). Admin → Email log shows queued and failed emails, with
+  "Send queued now" and "Retry failed". Emails with one-time links (passwords, email changes) are never
+  queued: they send straight away, because their links are not stored.
+- Every new payment and re-uploaded receipt is also sent to `PAYMENT_ALERT_EMAIL`
+  (default reallogixs@outlook.com).
+- Teachers are never emailed: `sendMail` skips them, and admins get teachers' one-time password links
+  on screen to pass on.
+- Admin → Notifications lists what needs action (payments to confirm, classes to start or complete,
+  failed emails), worked out from the data each time.
+
+## Certificates
+
+- One design, measured in PDF points (`src/lib/certificateLayout.ts`). `certificatePieces()` places every
+  word, rule and the seal; the web page scales those to its width and the PDF draws them as they are.
+- Fonts: Cormorant Garamond and Poppins (`src/assets/fonts`, SIL Open Font Licence). The page loads them
+  with `next/font/local`; the PDF embeds the same files through `@pdf-lib/fontkit`. Line breaks are
+  measured on the server with those files, so both break in the same places.
+- Names in scripts the fonts don't cover (such as Urdu) get no PDF; the web certificate still shows them.
+
 ## Logins
 
 | Who     | Page             |                                                   |
@@ -108,7 +139,8 @@ wrong password. `lib/account/loginPath.ts` holds the paths.
 
 - **Passwords** are bcrypt, cost 12 (`src/server/core/password.ts`), up to 72 bytes. Older scrypt hashes still
   work and are replaced at the next login. Session and link secrets are random, so they use a fast SHA-256.
-- **Admin email and password:** Admin → My account. A new email only takes over once the link sent to it is
+- **Email and password:** each portal's settings (students and admins can change their own email;
+  admins change teachers' emails). Admin → My account. A new email only takes over once the link sent to it is
   used; every device is then signed out and the old email is told.
 - **First admin in production:** put the production `DATABASE_URL` and `SITE_URL` in `.env.prod` (git-ignored),
   run `pnpm db:admin:prod "Full Name" email@example.com "0300 1234567"`, then delete the file. Without SMTP

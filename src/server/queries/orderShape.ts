@@ -4,6 +4,7 @@ import type { CatalogueCourse } from "@/types/catalogue";
 import type { Certificate, Meeting, Order, OrderEvent, PaymentMethod } from "@/types/domain";
 import type { PortalData } from "@/types/portal";
 import { db } from "@/server/db";
+import { fileUrl } from "@/server/files/storage";
 import type { Prisma } from "@/server/db/generated/client";
 
 export const ORDER_INCLUDE = {
@@ -90,10 +91,11 @@ export function toTeacherOrder(row: OrderRow): Order {
 }
 
 function toCourse({ course }: OrderRow): CatalogueCourse {
-  const { meeting, archivedAt, updatedAt, startsAt, createdAt, ...rest } = course;
+  const { meeting, archivedAt, updatedAt, startsAt, createdAt, bannerPublicId, ...rest } = course;
   void updatedAt;
   return {
     ...rest,
+    bannerUrl: fileUrl("banners", bannerPublicId),
     status: archivedAt ? "draft" : rest.status,
     startsAt: startsAt.toISOString(),
     createdAt: createdAt.toISOString(),

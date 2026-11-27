@@ -31,6 +31,11 @@ export async function prepareReceipt(file: File): Promise<File> {
   return blob && blob.size < file.size ? new File([blob], file.name, { type: "image/jpeg" }) : file;
 }
 
+/** A banner for the form's preview: 1600 px wide at most, as a JPEG. */
+export async function readBannerFile(file: File): Promise<string> {
+  return (await draw(file, 1600)).toDataURL("image/jpeg", 0.82);
+}
+
 /** A logo for the form's preview: SVG as it is, others shrunk with transparency kept. */
 export async function readLogoFile(file: File): Promise<string> {
   if (file.type === "image/svg+xml") return readAsDataUrl(file);

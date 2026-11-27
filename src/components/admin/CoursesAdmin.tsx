@@ -89,6 +89,7 @@ export function CoursesAdmin({ courses, categories, instructors }: Catalogue): R
                   {course.status === "published" ? "Published" : "Draft"}
                 </Badge>
                 {!course.enrolmentOpen ? <Badge tone="warning">Closed</Badge> : null}
+                {course.featured ? <Badge tone="info">Featured</Badge> : null}
               </div>
             ),
           },

@@ -5,7 +5,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 
 import { RECEIPT_TYPES } from "@/lib/validation/checkout";
-import { LOGO_MAX_BYTES, LOGO_TYPES } from "@/lib/validation/admin";
+import { BANNER_MAX_BYTES, BANNER_TYPES, LOGO_MAX_BYTES, LOGO_TYPES } from "@/lib/validation/admin";
 import { fileEnvironment } from "@/server/core/env";
 import { ActionError } from "@/server/core/errors";
 
@@ -17,7 +17,21 @@ import { sniffType } from "./sniff";
  * Logos are public. Development without Cloudinary keeps both in the git-ignored .uploads
  * folder; in production, missing Cloudinary settings are an error.
  */
-type Kind = "receipts" | "logos";
+type Kind = "receipts" | ImageKind;
+export type ImageKind = "logos" | "banners";
+
+const IMAGE_RULES: Record<ImageKind, { types: string[]; maxBytes: number; message: string }> = {
+  logos: {
+    types: LOGO_TYPES,
+    maxBytes: LOGO_MAX_BYTES,
+    message: "Use a PNG, JPG, WebP or SVG logo under 512 KB.",
+  },
+  banners: {
+    types: BANNER_TYPES,
+    maxBytes: BANNER_MAX_BYTES,
+    message: "Use a JPG, PNG or WebP image under 3 MB.",
+  },
+};
 
 const LOCAL = "local/";
 const DIR = ".uploads";
@@ -62,14 +76,15 @@ export async function saveReceipt(file: File): Promise<StoredFile> {
   return save("receipts", data, mimeType);
 }
 
-/** A logo arrives as the data URL shown in the form's preview. */
-export async function saveLogo(dataUrl: string): Promise<string> {
+/** Logos and banners arrive as the data URL shown in the form's preview. */
+export async function saveImage(kind: ImageKind, dataUrl: string): Promise<string> {
+  const rules = IMAGE_RULES[kind];
   const match = /^data:image\/[a-z+]+;base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
   const bytes = match?.[1] ? Uint8Array.from(Buffer.from(match[1], "base64")) : null;
   const mimeType = bytes && sniffType(bytes.buffer);
-  if (!bytes || !mimeType || !LOGO_TYPES.includes(mimeType) || bytes.byteLength > LOGO_MAX_BYTES)
-    throw new ActionError("Use a PNG, JPG, WebP or SVG logo under 512 KB.");
-  return (await save("logos", bytes.buffer, mimeType)).publicId;
+  if (!bytes || !mimeType || !rules.types.includes(mimeType) || bytes.byteLength > rules.maxBytes)
+    throw new ActionError(rules.message);
+  return (await save(kind, bytes.buffer, mimeType)).publicId;
 }
 
 export async function readReceipt(publicId: string): Promise<ArrayBuffer | null> {
@@ -98,9 +113,12 @@ export async function removeFile(kind: Kind, publicId: string): Promise<void> {
   }
 }
 
-export function logoUrl(publicId: string | null): string | null {
+export function fileUrl(kind: ImageKind, publicId: string | null): string | null {
   if (!publicId) return null;
-  if (publicId.startsWith(LOCAL)) return `/api/dev-logos/${basename(publicId)}`;
+  if (publicId.startsWith(LOCAL)) return `/api/dev-files/${kind}/${basename(publicId)}`;
   const config = cloudinaryConfig();
-  return config && imageUrl(config, publicId);
+  return config && imageUrl(config, publicId, kind === "banners" ? BANNER_SIZE : LOGO_SIZE);
 }
+
+const LOGO_SIZE = "c_limit,w_256";
+const BANNER_SIZE = "c_fill,g_auto,w_1600,h_900";

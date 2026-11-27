@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Award,
+  Bell,
   BookOpen,
   FolderTree,
   GraduationCap,
@@ -38,6 +39,7 @@ export const PORTAL_NAV: Record<Role, PortalNavGroup[]> = {
     {
       items: [
         { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/admin/notifications", label: "Notifications", icon: Bell },
         {
           href: "/admin/payments",
           label: "Verify payments",

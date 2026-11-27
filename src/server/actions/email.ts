@@ -2,10 +2,11 @@
 
 import { after } from "next/server";
 
+import type { Role } from "@/types/domain";
 import { LOGIN_PATH } from "@/lib/account/loginPath";
 import { changeEmailSchema, confirmEmailSchema } from "@/lib/validation/auth";
 import { consumeToken, createEmailLink, findEmailChange } from "@/server/core/accountTokens";
-import { publicAction, roleAction } from "@/server/core/action";
+import { publicAction, userAction } from "@/server/core/action";
 import { audit } from "@/server/core/audit";
 import { siteUrl } from "@/server/core/env";
 import { ActionError } from "@/server/core/errors";
@@ -15,17 +16,21 @@ import { db, type Tx } from "@/server/db";
 import { sendMail } from "@/server/email/send";
 import { confirmNewEmail, emailChanging } from "@/server/email/templates";
 
+/** Who can move their own login to another email. */
+const CAN_CHANGE: Role[] = ["admin", "student"];
+
 async function assertFree(client: Tx, email: string): Promise<void> {
   if (await client.user.findUnique({ where: { email }, select: { id: true } }))
     throw new ActionError("Another account already uses this email.");
 }
 
 /** Nothing changes until the link sent to the new address is used, so a typo can't lock you out. */
-export const requestEmailChange = roleAction(
+export const requestEmailChange = userAction(
   "change-email",
-  "admin",
   changeEmailSchema,
-  async (input, { id }): Promise<void> => {
+  async (input, { id, role }): Promise<void> => {
+    // Teachers aren't emailed for now, so an admin changes their email for them.
+    if (!CAN_CHANGE.includes(role)) throw new ActionError("Ask the Reallogixs team to change it.");
     await limit("change-email", id, 10, 15);
     const client = db();
     const email = input.email.toLowerCase();
@@ -35,7 +40,7 @@ export const requestEmailChange = roleAction(
     if (email === user.email) throw new ActionError("That is already your email.");
     await assertFree(client, email);
     const url = await createEmailLink(client, id, email);
-    await audit(client, id, "admin.email_requested", "user", id);
+    await audit(client, id, "account.email_requested", "user", id);
     if (!(await sendMail(email, confirmNewEmail(user.name, url), id)))
       throw new ActionError("The email couldn't be sent. Check the email settings and try again.");
     const reset = siteUrl("/forgot-password");
@@ -54,16 +59,22 @@ export const confirmEmailChange = publicAction(
       if (!change || !(await consumeToken(tx, token, ["verify_email"])))
         throw new ActionError("This link has expired or was already used. Ask for a new one.");
       const user = await tx.user.findUniqueOrThrow({ where: { id: change.userId } });
-      if (user.role !== "admin" || !user.active || user.archivedAt)
+      if (!CAN_CHANGE.includes(user.role) || !user.active || user.archivedAt)
         throw new ActionError("This account is paused. Contact the Reallogixs team.");
       await assertFree(tx, change.newEmail);
       await tx.user.update({
         where: { id: user.id },
         data: { email: change.newEmail, emailVerifiedAt: new Date() },
       });
+      // Guest orders with either email are theirs: both addresses are now proven.
+      if (user.role === "student")
+        await tx.order.updateMany({
+          where: { studentId: null, contactEmail: { in: [user.email, change.newEmail] } },
+          data: { studentId: user.id },
+        });
       await tx.session.deleteMany({ where: { userId: user.id } });
       await tx.authToken.deleteMany({ where: { userId: user.id, usedAt: null } });
-      await audit(tx, user.id, "admin.email_changed", "user", user.id);
+      await audit(tx, user.id, "account.email_changed", "user", user.id);
       return user;
     });
     after(() => sendMail(before.email, emailChanging(before.name, true, ""), before.id));

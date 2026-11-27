@@ -14,13 +14,13 @@ import {
   reuploadSchema,
 } from "@/lib/validation/checkout";
 import { publicAction } from "@/server/core/action";
-import { siteUrl } from "@/server/core/env";
+import { alertEmail, siteUrl } from "@/server/core/env";
 import { ActionError } from "@/server/core/errors";
 import { lockOrder } from "@/server/core/locks";
 import { clientIp, limit } from "@/server/core/request";
 import { db } from "@/server/db";
 import { sendMail } from "@/server/email/send";
-import { orderReceived } from "@/server/email/templates";
+import { orderReceived, paymentAlert } from "@/server/email/templates";
 import { removeFile, saveReceipt } from "@/server/files/storage";
 import { getPublicCatalogue } from "@/server/queries/catalogue";
 import { orderResult } from "@/server/queries/orders";
@@ -130,8 +130,8 @@ export const placeOrder = publicAction(
         throw error;
       });
 
-    after(() =>
-      sendMail(
+    after(async () => {
+      await sendMail(
         email,
         orderReceived(order.contactName, {
           number: order.number,
@@ -140,11 +140,39 @@ export const placeOrder = publicAction(
           url: siteUrl(`/track?order=${order.number}`),
         }),
         order.id,
-      ),
-    );
+      );
+      await alertAdmins(order.id, false);
+    });
     return orderResult(order.id);
   },
 );
+
+/** Tells the Reallogixs inbox a receipt is waiting. */
+async function alertAdmins(orderId: string, resent: boolean): Promise<void> {
+  const order = await db().order.findUniqueOrThrow({
+    where: { id: orderId },
+    include: {
+      course: { select: { title: true } },
+      paymentMethod: { select: { name: true } },
+      receipts: { orderBy: { createdAt: "desc" }, take: 1 },
+    },
+  });
+  await sendMail(
+    alertEmail(),
+    paymentAlert({
+      number: order.number,
+      student: order.contactName,
+      course: order.course.title,
+      amount: formatPKR(order.total),
+      method: order.paymentMethod.name,
+      reference: order.receipts[0]?.transactionRef ?? "—",
+      promo: order.promoCode ?? "None",
+      resent,
+      url: siteUrl(`/admin/payments?order=${order.number}`),
+    }),
+    order.id,
+  );
+}
 
 const NOT_FOUND = "We couldn't find an order with that number and phone. Check both and try again.";
 
@@ -167,6 +195,7 @@ export const lookupOrder = publicAction(
   orderLookupSchema,
   async ({ orderId, phone }): Promise<OrderResult> => {
     const { id } = await findOwned(orderId, phone);
+    after(() => alertAdmins(id, true));
     return orderResult(id);
   },
 );
@@ -195,6 +224,7 @@ export const reuploadReceipt = publicAction(
       await removeFile("receipts", stored.publicId);
       throw error;
     }
+    after(() => alertAdmins(id, true));
     return orderResult(id);
   },
 );

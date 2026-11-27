@@ -17,14 +17,14 @@ import { UserAvatar } from "./UserAvatar";
 
 interface PortalTopbarProps {
   role: Role;
-  pending?: Promise<number>;
+  notices?: Promise<number>;
   menuOpen: boolean;
   onOpenMenu: () => void;
 }
 
 export function PortalTopbar({
   role,
-  pending,
+  notices,
   menuOpen,
   onOpenMenu,
 }: PortalTopbarProps): ReactElement {
@@ -61,14 +61,12 @@ export function PortalTopbar({
           View site <ExternalLink aria-hidden="true" className="size-3.5" />
         </Link>
         {role === "admin" ? (
-          <PendingCount count={pending}>
+          <PendingCount count={notices}>
             {(count) => (
               <Link
-                href="/admin/payments"
+                href="/admin/notifications"
                 aria-label={
-                  count
-                    ? `${count} receipts awaiting verification`
-                    : "No receipts awaiting verification"
+                  count ? `Notifications: ${count} need you` : "Notifications: nothing needs you"
                 }
                 className="relative inline-flex size-11 items-center justify-center rounded-pill text-ink-soft hover:bg-canvas hover:text-ink"
               >
@@ -76,8 +74,10 @@ export function PortalTopbar({
                 {count ? (
                   <span
                     aria-hidden="true"
-                    className="absolute top-2.5 right-2.5 size-2 rounded-pill bg-error ring-2 ring-white"
-                  />
+                    className="absolute top-1 right-0.5 flex h-5 min-w-5 items-center justify-center rounded-pill bg-error px-1 text-[0.6875rem] leading-none font-semibold text-white ring-2 ring-white"
+                  >
+                    {count > 99 ? "99+" : count}
+                  </span>
                 ) : null}
               </Link>
             )}

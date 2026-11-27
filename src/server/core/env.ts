@@ -15,6 +15,11 @@ export interface MailConfig {
   from: string;
 }
 
+/** The inbox told about every new payment. */
+export function alertEmail(): string {
+  return process.env.PAYMENT_ALERT_EMAIL || "reallogixs@outlook.com";
+}
+
 /** Null when SMTP isn't set up. */
 export function mailConfig(): MailConfig | null {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM } = process.env;

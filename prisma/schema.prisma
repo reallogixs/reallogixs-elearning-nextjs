@@ -184,6 +184,8 @@ model Course {
   status          CourseStatus @default(draft)
   enrolmentOpen   Boolean      @default(true) @map("enrolment_open")
   featured        Boolean      @default(false)
+  /// Cloudinary public id of the banner image; null shows the branded artwork.
+  bannerPublicId  String?      @map("banner_public_id")
   archivedAt      DateTime?    @map("archived_at") @db.Timestamptz
   createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
@@ -453,18 +455,25 @@ enum EmailStatus {
 
 /// A record of each email, never its text: links and tokens are not stored here.
 model EmailMessage {
-  id        String      @id @default(uuid(7)) @db.Uuid
-  template  String
-  to        String
-  subject   String
-  status    EmailStatus @default(queued)
-  attempts  Int         @default(0)
-  error     String?
-  /// The record it is about, e.g. an order id, so it can be sent again.
-  entityId  String?     @map("entity_id")
-  sentAt    DateTime?   @map("sent_at") @db.Timestamptz
-  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  id            String      @id @default(uuid(7)) @db.Uuid
+  template      String
+  to            String
+  subject       String
+  status        EmailStatus @default(queued)
+  attempts      Int         @default(0)
+  error         String?
+  /// The record it is about, e.g. an order id. Queued emails are rebuilt from it when sent.
+  entityId      String?     @map("entity_id")
+  sentAt        DateTime?   @map("sent_at") @db.Timestamptz
+  /// Queued emails: not before this (retries back off).
+  nextAttemptAt DateTime    @default(now()) @map("next_attempt_at") @db.Timestamptz
+  /// Queued emails: a worker holds it until this, so two never send the same email.
+  lockedUntil   DateTime?   @map("locked_until") @db.Timestamptz
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
 
+  /// An email is queued once: completing a class twice can't send a certificate twice.
+  @@unique([template, entityId], where: raw("status = 'queued'"), map: "email_messages_one_queued")
+  @@index([status, nextAttemptAt])
   @@index([status, createdAt])
   @@map("email_messages")
 }

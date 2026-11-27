@@ -34,7 +34,7 @@ export function ProfileForm({ user }: { user: User }): ReactElement {
           <Field
             label="Email"
             hint={
-              user.role === "admin" ? "Change it below." : "Contact us to change your login email."
+              user.role !== "teacher" ? "Change it below." : "Ask the Reallogixs team to change it."
             }
           >
             {(control) => <Input {...control} value={user.email} readOnly />}

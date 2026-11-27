@@ -14,13 +14,20 @@ function hash(value: string): number {
 
 interface CourseCoverProps {
   title: string;
+  bannerUrl?: string | null;
   category?: string;
   mode: CourseMode;
   className?: string;
 }
 
-/** Branded placeholder artwork until course images come from Cloudinary. Decorative. */
-export function CourseCover({ title, category, mode, className }: CourseCoverProps): ReactElement {
+/** The course banner, or branded artwork when there is none. Decorative. */
+export function CourseCover({
+  title,
+  bannerUrl,
+  category,
+  mode,
+  className,
+}: CourseCoverProps): ReactElement {
   const variant = VARIANTS[hash(title) % VARIANTS.length];
   return (
     <div
@@ -31,7 +38,21 @@ export function CourseCover({ title, category, mode, className }: CourseCoverPro
         className,
       )}
     >
-      <div className="absolute inset-0 -z-10 bg-grid-dark" />
+      {bannerUrl ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes and formats it. */}
+          <img
+            src={bannerUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 -z-20 size-full object-cover transition-transform duration-slow ease-out-expo group-hover:scale-[1.03]"
+          />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-navy-950/70 via-navy-950/10 to-navy-950/40" />
+        </>
+      ) : (
+        <div className="absolute inset-0 -z-10 bg-grid-dark" />
+      )}
       <div className="flex items-center justify-between gap-2">
         <span className="rounded-pill glass px-3 py-1 font-mono text-[0.6875rem] tracking-[0.12em] uppercase">
           {category ?? "Course"}
@@ -40,7 +61,9 @@ export function CourseCover({ title, category, mode, className }: CourseCoverPro
           {MODE_LABEL[mode]}
         </span>
       </div>
-      <CircuitLine className="text-sky-300 opacity-60 transition-transform duration-slow ease-out-expo group-hover:translate-x-3" />
+      {bannerUrl ? null : (
+        <CircuitLine className="text-sky-300 opacity-60 transition-transform duration-slow ease-out-expo group-hover:translate-x-3" />
+      )}
     </div>
   );
 }
